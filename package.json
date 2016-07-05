@@ -1,0 +1,32 @@
+{
+  "name": "mafia",
+  "version": "1.0.0",
+  "description": "## Многопользовательская ролевая игра мафия, правила и процесс описаны по ссылкам: * http://mafia-spbgame.ru/pravila.html * http://mafia-minsk.by/pravila_igry_mafiya.html",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/andreevWork/mafia.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/andreevWork/mafia/issues"
+  },
+  "homepage": "https://github.com/andreevWork/mafia#readme",
+  "dependencies": {
+    "minimatch": "^3.0.2",
+    "redux": "^3.5.2",
+    "ts-loader": "^0.8.2",
+    "underscore": "^1.8.3"
+  },
+  "devDependencies": {
+    "jasmine-core": "^2.4.1",
+    "karma": "^1.1.0",
+    "karma-jasmine": "^1.0.2",
+    "karma-phantomjs-launcher": "^1.0.1"
+  }
+}
