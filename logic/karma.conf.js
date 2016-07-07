@@ -4,6 +4,14 @@ module.exports = function(config) {
         files: [
             '_test/_build/**/*.js'
         ],
+        preprocessors: {
+            '_test/_build/**/*.js': ["babel"]
+        },
+        babelPreprocessor: {
+            options: {
+                presets: ['es2015']
+            }
+        },
         colors: true,
         autoWatch: true,
         browsers: ['PhantomJS'],

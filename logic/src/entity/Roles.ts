@@ -1,3 +1,8 @@
+import * as _ from 'underscore';
+
+/*
+* Самая базовая сущность в игре
+ */
 enum Roles {
     INHABITANT,
     MAFIA,
@@ -6,26 +11,7 @@ enum Roles {
     WHORE
 }
 
-namespace Roles {
-    export function isMafia(role: Roles) {
-        return role === Roles.MAFIA;
-    }
-
-    export function isDoctor(role: Roles) {
-        return role === Roles.DOCTOR;
-    }
-
-    export function isWhore(role: Roles) {
-        return role === Roles.WHORE;
-    }
-
-    export function isInhabitant(role: Roles) {
-        return role === Roles.INHABITANT;
-    }
-
-    export function isCommissar(role: Roles) {
-        return role === Roles.COMMISSAR;
-    }
-}
+// Запишем строковые названия ролей в отдельную переменную
+export const RolesKeys = _.keys(Roles).filter((key: string) => _.isNaN(+key));
 
 export default Roles;

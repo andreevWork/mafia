@@ -61,8 +61,12 @@ module.exports = {
         loaders: [
             {
                 test: /\.ts$/,
-                loader: "ts"
+                loader: "babel!ts"
             }
         ]
+    },
+    babel : {
+        presets: ['es2015'],
+        plugins: ['transform-object-assign']
     }
 };
