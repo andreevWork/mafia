@@ -1,0 +1,102 @@
+@import "common/variable.scss";
+@import "common/mixins.scss";
+
+$margin_left_block: 5%;
+$width_block: 90%;
+
+.landing-block {
+  min-height: 100vh;
+  padding-bottom: 5vh;
+  
+  &__first {
+    background: rgba(darken($main_color, 5%), $main_opacity);
+  }
+
+  &__second {
+    background: rgba(darken($main_color, 10%), $main_opacity - 0.1);
+  }
+
+  &__third {
+    background: rgba(darken($main_color, 15%), $main_opacity - 0.2);
+  }
+
+  &__four {
+    background: rgba(darken($main_color, 20%), $main_opacity - 0.3);
+  }
+
+  &__conteiner {
+    width: $width_block;
+    margin-left: $margin_left_block;
+  }
+
+  &__nav {
+    height: 25vh;
+  }
+
+  &__text {
+    line-height: 2em;
+    padding-top: 5vh;
+  }
+
+  &__title {
+    font-size: 3em;
+    text-align: center;
+    padding-top: 5vh;
+    padding-bottom: 2vh;
+  }
+
+  &__sub-title {
+    font-size: 2em;
+    padding-top: 2vh;
+    padding-bottom: 5vh;
+  }
+
+  &__list {
+    list-style: none;
+    margin: 0;
+    margin-left: $margin_left_block * 1.5;
+
+
+    li {
+      margin-bottom: 10px;
+      position: relative;
+
+      &::before {
+        content:"";
+        position: absolute;
+        left: -46px;
+        top: -3px;
+        width: 40px;
+        height: 40px;
+        background:url("bulet.png");
+        background-size: cover;
+
+      }
+    }
+  }
+
+  &__rules{
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: space-around;
+
+    &-item {
+      width: 30%;
+      margin-bottom: 5vh;
+      word-wrap: break-word;
+
+      @include notebook {
+        width: 45%;
+      }
+      @include phone {
+        width: 100%;
+      }
+    }
+
+    &-img {
+      margin-right: 1em;
+      float: left;
+    }
+  }
+
+}

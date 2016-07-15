@@ -1,0 +1,57 @@
+extends ./common.jade
+
+block content
+    div(class="landing-block landing-block__first")
+        div(class="landing-block__nav")
+        div(class="landing-block__title landing-block__conteiner") Онлайн версия популярной игры "Мафия".
+        div(class="landing-block__text landing-block__conteiner")
+            p
+                | Даже если вы часто играете в мафию, советую бегло просмотреть основные роли и нюансы игры. Игра по одним правилам, поможет избежать разногласий в вашей компании.
+            p
+                | В разделе "Процесс игры" объясняется, как играть в данную онлайновую версию, и чем она проще и лучше обычной.
+
+    div(class="landing-block landing-block__second")
+        div(class="landing-block__title landing-block__conteiner") Процесс игры
+    div(class="landing-block landing-block__third")
+        div(class="landing-block__title landing-block__conteiner") Общие правила игры
+        div(class="landing-block__sub-title landing-block__conteiner") Роли:
+        div(class="landing-block__rules landing-block__conteiner")
+            div(class="landing-block__rules-item")
+                img(class="card card--mini landing-block__rules-img" src="Inhabitant.png")
+                b Мирные жители (горожане)
+                |  - играют только “днем”, могут в это время суток, с помощью голосования, казнить одного из игроков. До конца игры не знают, кто из игроков за кого играет.
+            div(class="landing-block__rules-item")
+                img(class="card card--mini landing-block__rules-img" src="mafia.png")
+                b Мафия
+                |  - днем прикидываются мирными жителями, ночью просыпаются и убивают мирных жителей. Все Мафиози знают друг друга.
+            div(class="landing-block__rules-item")
+                img(class="card card--mini landing-block__rules-img" src="doctor.png")
+                b Доктор
+                |  – играет за жителей. Игрок, получивший эту роль, может спасти ночью от смерти одного из игроков.
+            div(class="landing-block__rules-item")
+                img(class="card card--mini landing-block__rules-img" src="putana.png")
+                b Путана
+                |  – играет за жителей. Ночью путана выбирает одного из игроков, которого она спасает от смерти. Отличие только в том, что если убивают доктора, то пациент остается жив. Если же представительница древнейшей профессии сама становится ночной жертвой мафии, то вместе с ней погибает и ее клиент.
+            div(class="landing-block__rules-item")
+                img(class="card card--mini landing-block__rules-img" src="commissar.png")
+                b Комиссар
+                |  – играет за жителей. Просыпаясь ночью и выбрав одного игрока, он получает ответ на вопрос, является ли указанный человек мафиози.
+        div(class="landing-block__sub-title landing-block__conteiner") Основные моменты игры:
+        ul(class="landing-block__list landing-block__conteiner")
+            li
+                | Если при любом голосовании не было достигнуто большинство голосов, выбор будет сделан случайным образом среди игроков, за которых отдали одинаково много голосов.
+            li
+                | Доктор может лечить себя.
+            li
+                | Доктор не может лечить одного игрока два раза подряд.
+            li
+                | Путана не может любить саму себя.
+            li
+                | Путана может спать с одним игроком сколько угодно раз.
+            li
+                | Если ночью стреляли в путану, то умирает она и ее клиент, об этом уже упоминалось в описании ее роли. Однако если доктор лечит кого-то из них двоих, то этот игрок остается жив. Например если стреляли в путану, но доктор спасал этой ночью ее, тогда умирает только ее клиент или же если доктор спасал клиента, то умирает только путана.
+            li
+                    | Мафия побеждает, как только их численность сравнялась с числом всех остальных ролей. Жители побеждают, если казнят всех мафиози.
+    div(class="landing-block landing-block__four")
+        div(class="landing-block__title landing-block__conteiner") О проекте
+    script(async, defer, type="text/javascript", src="index.js")

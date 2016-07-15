@@ -1,0 +1,35 @@
+@import "common/normalize.css";
+@import "common/card.scss";
+@import "index.scss";
+
+
+body {
+  background-image: url($body_bg);
+  color: $text_color;
+  font-family: Verdana, Tahoma;
+  font-size: 20px;
+  font-style: normal;
+  font-variant: normal;
+  font-weight: 500;
+  line-height: 1.4em;
+
+  @include notebook {
+    font-size: 20px;
+  }
+
+  @include tablet {
+    font-size: 16px;
+  }
+
+  @include phone {
+    font-size: 15px;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  p {
+    margin: 0px;
+  }
+}

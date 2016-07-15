@@ -45,73 +45,228 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
-
-	var GameStatus_1 = __webpack_require__(3);
-	var Roles_1 = __webpack_require__(4);
+	var GameStatus_1 = __webpack_require__(5);
+	var Roles_1 = __webpack_require__(6);
+	var States_1 = __webpack_require__(2);
+	var PlayersMocks_1 = __webpack_require__(11);
 	describe('GameStatus', function () {
 	    it('getActiveRole', function () {
-	        expect(GameStatus_1.GameStatusHelpers.getActiveRole(GameStatus_1.GameStatus['VOTE_MAFIA'])).toBe(Roles_1["default"].MAFIA);
-	        expect(GameStatus_1.GameStatusHelpers.getActiveRole(GameStatus_1.GameStatus['VOTE_INHABITANT'])).toBe(Roles_1["default"].INHABITANT);
-	        expect(GameStatus_1.GameStatusHelpers.getActiveRole(GameStatus_1.GameStatus['DAY_AFTER_NIGHT'])).toBeNull();
-	        expect(GameStatus_1.GameStatusHelpers.getActiveRole(GameStatus_1.GameStatus['WAKE_UP_INHABITANT'])).toBeNull();
+	        expect(GameStatus_1.GameStatusHelpers.getActiveRole(GameStatus_1.GameStatus.VOTE_MAFIA)).toEqual([Roles_1["default"].MAFIA]);
+	        expect(GameStatus_1.GameStatusHelpers.getActiveRole(GameStatus_1.GameStatus.VOTE_DOCTOR)).toEqual([Roles_1["default"].DOCTOR]);
+	        expect(GameStatus_1.GameStatusHelpers.getActiveRole(GameStatus_1.GameStatus.VOTE_INHABITANT)).toEqual([Roles_1["default"].MAFIA, Roles_1["default"].DOCTOR, Roles_1["default"].INHABITANT, Roles_1["default"].WHORE, Roles_1["default"].COMMISSAR]);
+	        expect(GameStatus_1.GameStatusHelpers.getActiveRole(GameStatus_1.GameStatus.DAY_AFTER_NIGHT)).toBeNull();
+	        expect(GameStatus_1.GameStatusHelpers.getActiveRole(GameStatus_1.GameStatus.WAKE_UP_INHABITANT)).toBeNull();
+	    });
+	    describe('getNextStatus', function () {
+	        var state;
+	        it('при самом начальном статусе игры, следующий статус, начало первой ночи, то есть город засыпает', function () {
+	            state = States_1.getNewState(States_1.InitialGameState, [], { status: GameStatus_1.GameStatus.START_THE_GAME });
+	            expect(GameStatus_1.GameStatusHelpers.getNextStatus(state)).toEqual(GameStatus_1.GameStatus.FALL_ASLEEP_INHABITANT);
+	        });
+	        it('после того как город уснул, всегда просыпается мафия, т. к. мафия в игре есть всегда', function () {
+	            state = States_1.getNewState(States_1.InitialGameState, [], { status: GameStatus_1.GameStatus.FALL_ASLEEP_INHABITANT });
+	            expect(GameStatus_1.GameStatusHelpers.getNextStatus(state)).toEqual(GameStatus_1.GameStatus.WAKE_UP_MAFIA);
+	        });
+	        it('после пробуждения мафия голосует', function () {
+	            state = States_1.getNewState(States_1.InitialGameState, [], { status: GameStatus_1.GameStatus.WAKE_UP_MAFIA });
+	            expect(GameStatus_1.GameStatusHelpers.getNextStatus(state)).toEqual(GameStatus_1.GameStatus.VOTE_MAFIA);
+	        });
+	        it('после голосования мафия засыпает', function () {
+	            state = States_1.getNewState(States_1.InitialGameState, [], { status: GameStatus_1.GameStatus.VOTE_MAFIA });
+	            expect(GameStatus_1.GameStatusHelpers.getNextStatus(state)).toEqual(GameStatus_1.GameStatus.FALL_ASLEEP_MAFIA);
+	        });
+	        it('после того как уснула мафия просыпается доктор, если он имеется в ролях', function () {
+	            var players = [
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].WHORE }),
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].MAFIA }),
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].DOCTOR })
+	            ];
+	            state = States_1.getNewState(States_1.InitialGameState, [], { status: GameStatus_1.GameStatus.FALL_ASLEEP_MAFIA, players: players });
+	            expect(GameStatus_1.GameStatusHelpers.getNextStatus(state)).toEqual(GameStatus_1.GameStatus.WAKE_UP_DOCTOR);
+	        });
+	        it('после пробуждения доктор голосует', function () {
+	            state = States_1.getNewState(States_1.InitialGameState, [], { status: GameStatus_1.GameStatus.WAKE_UP_DOCTOR });
+	            expect(GameStatus_1.GameStatusHelpers.getNextStatus(state)).toEqual(GameStatus_1.GameStatus.VOTE_DOCTOR);
+	        });
+	        it('после голосования доктор засыпает', function () {
+	            state = States_1.getNewState(States_1.InitialGameState, [], { status: GameStatus_1.GameStatus.VOTE_DOCTOR });
+	            expect(GameStatus_1.GameStatusHelpers.getNextStatus(state)).toEqual(GameStatus_1.GameStatus.FALL_ASLEEP_DOCTOR);
+	        });
+	        it('после того как уснула мафия просыпается путана, если нет доктора, а она имеется', function () {
+	            var players = [
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].WHORE }),
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].MAFIA }),
+	            ];
+	            state = States_1.getNewState(States_1.InitialGameState, [], { status: GameStatus_1.GameStatus.FALL_ASLEEP_MAFIA, players: players });
+	            expect(GameStatus_1.GameStatusHelpers.getNextStatus(state)).toEqual(GameStatus_1.GameStatus.WAKE_UP_WHORE);
+	        });
+	        it('после пробуждения путана голосует', function () {
+	            state = States_1.getNewState(States_1.InitialGameState, [], { status: GameStatus_1.GameStatus.WAKE_UP_WHORE });
+	            expect(GameStatus_1.GameStatusHelpers.getNextStatus(state)).toEqual(GameStatus_1.GameStatus.VOTE_WHORE);
+	        });
+	        it('после голосования путана засыпает', function () {
+	            state = States_1.getNewState(States_1.InitialGameState, [], { status: GameStatus_1.GameStatus.VOTE_WHORE });
+	            expect(GameStatus_1.GameStatusHelpers.getNextStatus(state)).toEqual(GameStatus_1.GameStatus.FALL_ASLEEP_WHORE);
+	        });
+	        it('после того как уснула мафия просыпается коммиссар, если нет ни доктора, ни путаны, а он имеется', function () {
+	            var players = [
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].COMMISSAR }),
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].MAFIA }),
+	            ];
+	            state = States_1.getNewState(States_1.InitialGameState, [], { status: GameStatus_1.GameStatus.FALL_ASLEEP_MAFIA, players: players });
+	            expect(GameStatus_1.GameStatusHelpers.getNextStatus(state)).toEqual(GameStatus_1.GameStatus.WAKE_UP_COMMISSAR);
+	        });
+	        it('после пробуждения коммиссар голосует', function () {
+	            state = States_1.getNewState(States_1.InitialGameState, [], { status: GameStatus_1.GameStatus.WAKE_UP_COMMISSAR });
+	            expect(GameStatus_1.GameStatusHelpers.getNextStatus(state)).toEqual(GameStatus_1.GameStatus.VOTE_COMMISSAR);
+	        });
+	        it('после голосования коммиссар засыпает', function () {
+	            state = States_1.getNewState(States_1.InitialGameState, [], { status: GameStatus_1.GameStatus.VOTE_COMMISSAR });
+	            expect(GameStatus_1.GameStatusHelpers.getNextStatus(state)).toEqual(GameStatus_1.GameStatus.FALL_ASLEEP_COMMISSAR);
+	        });
+	        it('после того как уснул доктор просыпается путана, если она имеется', function () {
+	            var players = [
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].COMMISSAR }),
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].WHORE }),
+	            ];
+	            state = States_1.getNewState(States_1.InitialGameState, [], { status: GameStatus_1.GameStatus.FALL_ASLEEP_DOCTOR, players: players });
+	            expect(GameStatus_1.GameStatusHelpers.getNextStatus(state)).toEqual(GameStatus_1.GameStatus.WAKE_UP_WHORE);
+	        });
+	        it('после того как уснул доктор просыпается коммиссар, если нет путаны, а он имеется', function () {
+	            var players = [
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].COMMISSAR }),
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].MAFIA }),
+	            ];
+	            state = States_1.getNewState(States_1.InitialGameState, [], { status: GameStatus_1.GameStatus.FALL_ASLEEP_DOCTOR, players: players });
+	            expect(GameStatus_1.GameStatusHelpers.getNextStatus(state)).toEqual(GameStatus_1.GameStatus.WAKE_UP_COMMISSAR);
+	        });
+	        it('после того как уснула путана засыпает, просыпается коммиссар, если он имеется', function () {
+	            var players = [
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].COMMISSAR }),
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].MAFIA }),
+	            ];
+	            state = States_1.getNewState(States_1.InitialGameState, [], { status: GameStatus_1.GameStatus.FALL_ASLEEP_WHORE, players: players });
+	            expect(GameStatus_1.GameStatusHelpers.getNextStatus(state)).toEqual(GameStatus_1.GameStatus.WAKE_UP_COMMISSAR);
+	        });
+	        it('после того как уснула мафия, если больше вообще нет действующих лиц город просыпается', function () {
+	            var players = [
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].MAFIA }),
+	            ];
+	            state = States_1.getNewState(States_1.InitialGameState, [], { status: GameStatus_1.GameStatus.FALL_ASLEEP_MAFIA, players: players });
+	            expect(GameStatus_1.GameStatusHelpers.getNextStatus(state)).toEqual(GameStatus_1.GameStatus.WAKE_UP_INHABITANT);
+	        });
+	        it('после того как уснул доктор, если больше вообще нет действующих лиц город просыпается', function () {
+	            var players = [
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].MAFIA }),
+	            ];
+	            state = States_1.getNewState(States_1.InitialGameState, [], { status: GameStatus_1.GameStatus.FALL_ASLEEP_DOCTOR, players: players });
+	            expect(GameStatus_1.GameStatusHelpers.getNextStatus(state)).toEqual(GameStatus_1.GameStatus.WAKE_UP_INHABITANT);
+	        });
+	        it('после того как уснула путана, если больше вообще нет действующих лиц город просыпается', function () {
+	            var players = [
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].MAFIA }),
+	            ];
+	            state = States_1.getNewState(States_1.InitialGameState, [], { status: GameStatus_1.GameStatus.FALL_ASLEEP_WHORE, players: players });
+	            expect(GameStatus_1.GameStatusHelpers.getNextStatus(state)).toEqual(GameStatus_1.GameStatus.WAKE_UP_INHABITANT);
+	        });
+	        it('после того как уснул коммисар, город просыпается', function () {
+	            var players = [
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].MAFIA }),
+	            ];
+	            state = States_1.getNewState(States_1.InitialGameState, [], { status: GameStatus_1.GameStatus.FALL_ASLEEP_COMMISSAR, players: players });
+	            expect(GameStatus_1.GameStatusHelpers.getNextStatus(state)).toEqual(GameStatus_1.GameStatus.WAKE_UP_INHABITANT);
+	        });
+	        it('после того как город проснулся, начинается день перед голосованием', function () {
+	            var players = [
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].MAFIA }),
+	            ];
+	            state = States_1.getNewState(States_1.InitialGameState, [], { status: GameStatus_1.GameStatus.WAKE_UP_INHABITANT, players: players });
+	            expect(GameStatus_1.GameStatusHelpers.getNextStatus(state)).toEqual(GameStatus_1.GameStatus.DAY_AFTER_NIGHT);
+	        });
+	        it('после первой половины дня начинается голосование', function () {
+	            var players = [
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].MAFIA }),
+	            ];
+	            state = States_1.getNewState(States_1.InitialGameState, [], { status: GameStatus_1.GameStatus.DAY_AFTER_NIGHT, players: players });
+	            expect(GameStatus_1.GameStatusHelpers.getNextStatus(state)).toEqual(GameStatus_1.GameStatus.VOTE_INHABITANT);
+	        });
+	        it('после дневного голосования, начинается вторая половина дня', function () {
+	            var players = [
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].MAFIA }),
+	            ];
+	            state = States_1.getNewState(States_1.InitialGameState, [], { status: GameStatus_1.GameStatus.VOTE_INHABITANT, players: players });
+	            expect(GameStatus_1.GameStatusHelpers.getNextStatus(state)).toEqual(GameStatus_1.GameStatus.DAY_BEFORE_NIGHT);
+	        });
+	        it('после второй половины дня вновь начинается новая ночь и город засыпает', function () {
+	            var players = [
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].MAFIA }),
+	            ];
+	            state = States_1.getNewState(States_1.InitialGameState, [], { status: GameStatus_1.GameStatus.DAY_BEFORE_NIGHT, players: players });
+	            expect(GameStatus_1.GameStatusHelpers.getNextStatus(state)).toEqual(GameStatus_1.GameStatus.FALL_ASLEEP_INHABITANT);
+	        });
 	    });
 	});
 
+
 /***/ },
 /* 1 */,
-/* 2 */,
-/* 3 */
+/* 2 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
-
-	var Roles_1 = __webpack_require__(4);
-	exports.GameStatus = {
-	    DAY_AFTER_NIGHT: 'day_after_night',
-	    DAY_BEFORE_NIGHT: 'day_before_night'
+	var _ = __webpack_require__(3);
+	exports.InitialGameState = {
+	    time_last_update: 0,
+	    time_last_update_players: 0,
+	    time_create: 0,
+	    status: null,
+	    players: [],
+	    active_roles: null,
+	    round_number: 0,
+	    vote_variants: [],
+	    votes: [],
+	    round_data: null
 	};
-	var vote_prefix = 'vote_';
-	var asleep_prefix = 'fall_asleep_';
-	var wakeup_prefix = 'wake_up_';
-	Roles_1.RolesKeys.forEach(function (key) {
-	    exports.GameStatus["" + asleep_prefix.toUpperCase() + key] = "" + asleep_prefix + key.toLowerCase();
-	    exports.GameStatus["" + wakeup_prefix.toUpperCase() + key] = "" + wakeup_prefix + key.toLowerCase();
-	    exports.GameStatus["" + vote_prefix.toUpperCase() + key] = "" + vote_prefix + key.toLowerCase();
-	});
-	var GameStatusHelpers;
-	(function (GameStatusHelpers) {
-	    function getActiveRole(game_status) {
-	        if (!~game_status.indexOf('vote')) {
-	            return null;
-	        }
-	        return Roles_1["default"][game_status.replace(vote_prefix, '').toUpperCase()];
-	    }
-	    GameStatusHelpers.getActiveRole = getActiveRole;
-	})(GameStatusHelpers = exports.GameStatusHelpers || (exports.GameStatusHelpers = {}));
+	exports.InitialRoomState = {
+	    time_last_update: 0,
+	    time_last_update_players: 0,
+	    time_create: 0,
+	    status: null,
+	    players: [],
+	    is_ready: false
+	};
+	function getNewState(old_state, time_keys, piece_of_new_state) {
+	    var time_state = {};
+	    time_keys.forEach(function (time_key) { time_state[time_key] = Date.now(); });
+	    return _.extend({}, old_state, time_state, piece_of_new_state);
+	}
+	exports.getNewState = getNewState;
+
 
 /***/ },
-/* 4 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-
-	var _ = __webpack_require__(5);
-	var Roles;
-	(function (Roles) {
-	    Roles[Roles["INHABITANT"] = 0] = "INHABITANT";
-	    Roles[Roles["MAFIA"] = 1] = "MAFIA";
-	    Roles[Roles["DOCTOR"] = 2] = "DOCTOR";
-	    Roles[Roles["COMMISSAR"] = 3] = "COMMISSAR";
-	    Roles[Roles["WHORE"] = 4] = "WHORE";
-	})(Roles || (Roles = {}));
-	exports.RolesKeys = _.keys(Roles).filter(function (key) {
-	    return _.isNaN(+key);
-	});
-	exports.__esModule = true;
-	exports["default"] = Roles;
-
-/***/ },
-/* 5 */
+/* 3 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;//     Underscore.js 1.8.3
@@ -1662,6 +1817,161 @@
 	    }.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 	  }
 	}.call(this));
+
+
+/***/ },
+/* 4 */,
+/* 5 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	var Roles_1 = __webpack_require__(6);
+	var _ = __webpack_require__(3);
+	(function (GameStatus) {
+	    GameStatus[GameStatus["START_THE_GAME"] = 0] = "START_THE_GAME";
+	    GameStatus[GameStatus["DAY_AFTER_NIGHT"] = 1] = "DAY_AFTER_NIGHT";
+	    GameStatus[GameStatus["DAY_BEFORE_NIGHT"] = 2] = "DAY_BEFORE_NIGHT";
+	    GameStatus[GameStatus["WAKE_UP_INHABITANT"] = 3] = "WAKE_UP_INHABITANT";
+	    GameStatus[GameStatus["VOTE_INHABITANT"] = 4] = "VOTE_INHABITANT";
+	    GameStatus[GameStatus["FALL_ASLEEP_INHABITANT"] = 5] = "FALL_ASLEEP_INHABITANT";
+	    GameStatus[GameStatus["WAKE_UP_MAFIA"] = 6] = "WAKE_UP_MAFIA";
+	    GameStatus[GameStatus["VOTE_MAFIA"] = 7] = "VOTE_MAFIA";
+	    GameStatus[GameStatus["FALL_ASLEEP_MAFIA"] = 8] = "FALL_ASLEEP_MAFIA";
+	    GameStatus[GameStatus["WAKE_UP_DOCTOR"] = 9] = "WAKE_UP_DOCTOR";
+	    GameStatus[GameStatus["VOTE_DOCTOR"] = 10] = "VOTE_DOCTOR";
+	    GameStatus[GameStatus["FALL_ASLEEP_DOCTOR"] = 11] = "FALL_ASLEEP_DOCTOR";
+	    GameStatus[GameStatus["WAKE_UP_WHORE"] = 12] = "WAKE_UP_WHORE";
+	    GameStatus[GameStatus["VOTE_WHORE"] = 13] = "VOTE_WHORE";
+	    GameStatus[GameStatus["FALL_ASLEEP_WHORE"] = 14] = "FALL_ASLEEP_WHORE";
+	    GameStatus[GameStatus["WAKE_UP_COMMISSAR"] = 15] = "WAKE_UP_COMMISSAR";
+	    GameStatus[GameStatus["VOTE_COMMISSAR"] = 16] = "VOTE_COMMISSAR";
+	    GameStatus[GameStatus["FALL_ASLEEP_COMMISSAR"] = 17] = "FALL_ASLEEP_COMMISSAR";
+	})(exports.GameStatus || (exports.GameStatus = {}));
+	var GameStatus = exports.GameStatus;
+	var GameStatusHelpers;
+	(function (GameStatusHelpers) {
+	    function getActiveRole(game_status) {
+	        switch (game_status) {
+	            case GameStatus.VOTE_MAFIA:
+	                return [Roles_1["default"].MAFIA];
+	            case GameStatus.VOTE_DOCTOR:
+	                return [Roles_1["default"].DOCTOR];
+	            case GameStatus.VOTE_WHORE:
+	                return [Roles_1["default"].WHORE];
+	            case GameStatus.VOTE_COMMISSAR:
+	                return [Roles_1["default"].COMMISSAR];
+	            case GameStatus.VOTE_INHABITANT:
+	                return [Roles_1["default"].MAFIA, Roles_1["default"].DOCTOR, Roles_1["default"].INHABITANT, Roles_1["default"].WHORE, Roles_1["default"].COMMISSAR];
+	            default:
+	                return null;
+	        }
+	    }
+	    GameStatusHelpers.getActiveRole = getActiveRole;
+	    function getNextStatus(state) {
+	        switch (state.status) {
+	            case GameStatus.START_THE_GAME:
+	            case GameStatus.DAY_BEFORE_NIGHT:
+	                return GameStatus.FALL_ASLEEP_INHABITANT;
+	            case GameStatus.WAKE_UP_INHABITANT:
+	                return GameStatus.DAY_AFTER_NIGHT;
+	            case GameStatus.DAY_AFTER_NIGHT:
+	                return GameStatus.VOTE_INHABITANT;
+	            case GameStatus.VOTE_INHABITANT:
+	                return GameStatus.DAY_BEFORE_NIGHT;
+	            case GameStatus.FALL_ASLEEP_INHABITANT:
+	                return GameStatus.WAKE_UP_MAFIA;
+	            case GameStatus.WAKE_UP_MAFIA:
+	                return GameStatus.VOTE_MAFIA;
+	            case GameStatus.VOTE_MAFIA:
+	                return GameStatus.FALL_ASLEEP_MAFIA;
+	            case GameStatus.WAKE_UP_DOCTOR:
+	                return GameStatus.VOTE_DOCTOR;
+	            case GameStatus.VOTE_DOCTOR:
+	                return GameStatus.FALL_ASLEEP_DOCTOR;
+	            case GameStatus.WAKE_UP_WHORE:
+	                return GameStatus.VOTE_WHORE;
+	            case GameStatus.VOTE_WHORE:
+	                return GameStatus.FALL_ASLEEP_WHORE;
+	            case GameStatus.WAKE_UP_COMMISSAR:
+	                return GameStatus.VOTE_COMMISSAR;
+	            case GameStatus.VOTE_COMMISSAR:
+	                return GameStatus.FALL_ASLEEP_COMMISSAR;
+	            case GameStatus.FALL_ASLEEP_COMMISSAR:
+	                return GameStatus.WAKE_UP_INHABITANT;
+	            case GameStatus.FALL_ASLEEP_MAFIA:
+	                if (_.findWhere(state.players, { role: Roles_1["default"].DOCTOR })) {
+	                    return GameStatus.WAKE_UP_DOCTOR;
+	                }
+	                if (_.findWhere(state.players, { role: Roles_1["default"].WHORE })) {
+	                    return GameStatus.WAKE_UP_WHORE;
+	                }
+	                if (_.findWhere(state.players, { role: Roles_1["default"].COMMISSAR })) {
+	                    return GameStatus.WAKE_UP_COMMISSAR;
+	                }
+	                return GameStatus.WAKE_UP_INHABITANT;
+	            case GameStatus.FALL_ASLEEP_DOCTOR:
+	                if (_.findWhere(state.players, { role: Roles_1["default"].WHORE })) {
+	                    return GameStatus.WAKE_UP_WHORE;
+	                }
+	                if (_.findWhere(state.players, { role: Roles_1["default"].COMMISSAR })) {
+	                    return GameStatus.WAKE_UP_COMMISSAR;
+	                }
+	                return GameStatus.WAKE_UP_INHABITANT;
+	            case GameStatus.FALL_ASLEEP_WHORE:
+	                if (_.findWhere(state.players, { role: Roles_1["default"].COMMISSAR })) {
+	                    return GameStatus.WAKE_UP_COMMISSAR;
+	                }
+	                return GameStatus.WAKE_UP_INHABITANT;
+	        }
+	    }
+	    GameStatusHelpers.getNextStatus = getNextStatus;
+	})(GameStatusHelpers = exports.GameStatusHelpers || (exports.GameStatusHelpers = {}));
+
+
+/***/ },
+/* 6 */
+/***/ function(module, exports) {
+
+	"use strict";
+	var Roles;
+	(function (Roles) {
+	    Roles[Roles["INHABITANT"] = 0] = "INHABITANT";
+	    Roles[Roles["MAFIA"] = 1] = "MAFIA";
+	    Roles[Roles["DOCTOR"] = 2] = "DOCTOR";
+	    Roles[Roles["COMMISSAR"] = 3] = "COMMISSAR";
+	    Roles[Roles["WHORE"] = 4] = "WHORE";
+	})(Roles || (Roles = {}));
+	exports.__esModule = true;
+	exports["default"] = Roles;
+
+
+/***/ },
+/* 7 */,
+/* 8 */,
+/* 9 */,
+/* 10 */,
+/* 11 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	var Roles_1 = __webpack_require__(6);
+	exports.INITIAL_NAME = 'Bob';
+	exports.INITIAL_AVATAR = '/avatar.png';
+	exports.INITIAL_TOKEN = 'a257dc9';
+	function getPlayer(_a) {
+	    var _b = _a === void 0 ? {} : _a, _c = _b.name, name = _c === void 0 ? exports.INITIAL_NAME : _c, _d = _b.avatar, avatar = _d === void 0 ? exports.INITIAL_AVATAR : _d, _e = _b.token, token = _e === void 0 ? exports.INITIAL_TOKEN : _e;
+	    return { name: name, avatar: avatar, token: token };
+	}
+	exports.getPlayer = getPlayer;
+	function getGamePlayer(_a) {
+	    var _b = _a === void 0 ? {} : _a, _c = _b.name, name = _c === void 0 ? exports.INITIAL_NAME : _c, _d = _b.avatar, avatar = _d === void 0 ? exports.INITIAL_AVATAR : _d, _e = _b.token, token = _e === void 0 ? exports.INITIAL_TOKEN : _e, _f = _b.role, role = _f === void 0 ? Roles_1["default"].INHABITANT : _f;
+	    return { name: name, avatar: avatar, token: token, role: role };
+	}
+	exports.getGamePlayer = getGamePlayer;
+	function getGamePlayerArray(len) {
+	    return Array.apply(null, { length: len }).map(function () { return getGamePlayer(); });
+	}
+	exports.getGamePlayerArray = getGamePlayerArray;
 
 
 /***/ }

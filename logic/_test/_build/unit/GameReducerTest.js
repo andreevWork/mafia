@@ -45,120 +45,74 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
-
 	var GameReducer_1 = __webpack_require__(1);
-	var GameStatus_1 = __webpack_require__(3);
-	var GameAction_1 = __webpack_require__(2);
-	var PlayersMocks_1 = __webpack_require__(6);
-	var Roles_1 = __webpack_require__(4);
-	var _ = __webpack_require__(5);
-	describe('RoomReducer', function () {
+	var States_1 = __webpack_require__(2);
+	var GameStatus_1 = __webpack_require__(5);
+	var GameAction_1 = __webpack_require__(4);
+	var PlayersMocks_1 = __webpack_require__(11);
+	var _ = __webpack_require__(3);
+	var GameStateMocks_1 = __webpack_require__(12);
+	describe('GameReducer', function () {
 	    var state, now;
 	    beforeEach(function () {
 	        now = Date.now();
 	    });
 	    it('initial state', function () {
 	        state = GameReducer_1["default"](undefined, { type: 'test_initial' });
-	        expect(state).toEqual(GameReducer_1.InitialGameState);
+	        expect(state).toEqual(States_1.InitialGameState);
 	    });
 	    it('create game', function () {
 	        var len = 8;
 	        state = GameReducer_1["default"](undefined, GameAction_1["default"].createGame(PlayersMocks_1.getGamePlayerArray(len)));
-	        expect(state.status).toEqual(GameStatus_1.GameStatus['DAY_BEFORE_NIGHT']);
+	        expect(state.status).toEqual(GameStatus_1.GameStatus.START_THE_GAME);
 	        expect(state.time_last_update).not.toBeLessThan(now);
 	        expect(state.time_last_update_players).not.toBeLessThan(now);
 	        expect(state.players.length).toBe(len);
 	        expect(state.time_create).not.toBeLessThan(now);
 	    });
-	    it('next game step', function () {
-	        state = GameReducer_1["default"](undefined, GameAction_1["default"].nextGameStep(GameStatus_1.GameStatus['WAKE_UP_COMMISSAR']));
-	        expect(state.status).toEqual(GameStatus_1.GameStatus['WAKE_UP_COMMISSAR']);
-	        expect(state.time_last_update).not.toBeLessThan(now);
-	        expect(state.time_last_update_players).not.toBeGreaterThan(now);
-	        expect(state.vote_variants.length).toBe(0);
-	        expect(state.votes.length).toBe(0);
-	        now = Date.now();
-	        var players = [PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }), PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].MAFIA }), PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].COMMISSAR }), PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].DOCTOR }), PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT })];
-	        state = GameReducer_1["default"](_.extend({}, GameReducer_1.InitialGameState, { players: players }), GameAction_1["default"].nextGameStep(GameStatus_1.GameStatus['VOTE_COMMISSAR']));
-	        expect(state.status).toEqual(GameStatus_1.GameStatus['VOTE_COMMISSAR']);
-	        expect(state.time_last_update).not.toBeLessThan(now);
-	        expect(state.time_last_update_players).not.toBeLessThan(now);
-	        expect(state.vote_variants.length).toBe(4);
-	        expect(state.vote_variants[0].role).toBeUndefined();
-	        expect(state.votes.length).toBe(1);
-	    });
 	    it('vote', function () {
-	        var for_whom_token = ' wedf443';
-	        state = GameReducer_1["default"](_.extend({}, GameReducer_1.InitialGameState, { votes: [{ who_token: '21er3' }, { who_token: PlayersMocks_1.INITIAL_TOKEN }] }), GameAction_1["default"].vote(PlayersMocks_1.INITIAL_TOKEN, for_whom_token));
-	        expect(state.votes).toBeLessThan(now);
+	        var for_whom_token = ' wedf443', another_token = 'dsf43f';
+	        state = GameReducer_1["default"](GameStateMocks_1.getGameStateAfterVote([{ who_token: another_token }, { who_token: PlayersMocks_1.INITIAL_TOKEN }]), GameAction_1["default"].vote(PlayersMocks_1.INITIAL_TOKEN, for_whom_token));
+	        expect(_.findWhere(state.votes, { who_token: another_token }).for_whom_token).toBeUndefined();
+	        expect(_.findWhere(state.votes, { who_token: PlayersMocks_1.INITIAL_TOKEN }).for_whom_token).toBe(for_whom_token);
+	    });
+	    it('голосовать можно только раз', function () {
+	        var for_whom_token = ' wedf443', another_token = 'dsf43f';
+	        state = GameReducer_1["default"](_.extend({}, States_1.InitialGameState, { votes: [{ who_token: another_token }, { who_token: PlayersMocks_1.INITIAL_TOKEN }] }), GameAction_1["default"].vote(PlayersMocks_1.INITIAL_TOKEN, for_whom_token));
+	        state = GameReducer_1["default"](state, GameAction_1["default"].vote(PlayersMocks_1.INITIAL_TOKEN, another_token));
+	        expect(_.findWhere(state.votes, { who_token: another_token }).for_whom_token).toBeUndefined();
+	        expect(_.findWhere(state.votes, { who_token: PlayersMocks_1.INITIAL_TOKEN }).for_whom_token).toBe(for_whom_token);
 	    });
 	});
+
 
 /***/ },
 /* 1 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
-
-	var GameAction_1 = __webpack_require__(2);
-	var GameStatus_1 = __webpack_require__(3);
-	var _ = __webpack_require__(5);
-	exports.InitialGameState = {
-	    time_last_update: 0,
-	    time_last_update_players: 0,
-	    time_create: 0,
-	    status: null,
-	    players: [],
-	    active_role: null,
-	    round_number: 0,
-	    vote_variants: [],
-	    votes: []
-	};
+	var States_1 = __webpack_require__(2);
+	var GameAction_1 = __webpack_require__(4);
+	var GameStatus_1 = __webpack_require__(5);
+	var _ = __webpack_require__(3);
+	var GameStatusReducer_1 = __webpack_require__(7);
 	function GameReducer(state, action) {
-	    if (state === void 0) {
-	        state = exports.InitialGameState;
-	    }
+	    if (state === void 0) { state = States_1.InitialGameState; }
 	    switch (action.type) {
 	        case GameAction_1["default"].CREATE_GAME:
-	            return _.extend({}, state, {
-	                time_create: Date.now(),
-	                time_last_update: Date.now(),
-	                time_last_update_players: Date.now(),
-	                status: GameStatus_1.GameStatus['DAY_BEFORE_NIGHT'],
+	            return States_1.getNewState(States_1.InitialGameState, ['time_create', 'time_last_update', 'time_last_update_players'], {
+	                status: GameStatus_1.GameStatus.START_THE_GAME,
 	                players: action.payload.players
 	            });
 	        case GameAction_1["default"].NEXT_GAME_STEP:
-	            var vote_variants = [],
-	                votes = [],
-	                active_role_1 = GameStatus_1.GameStatusHelpers.getActiveRole(action.payload.status),
-	                time_last_update_players = state.time_last_update_players;
-	            if (active_role_1 !== null) {
-	                vote_variants = state.players.filter(function (player) {
-	                    return active_role_1 !== player.role;
-	                }).map(function (player) {
-	                    delete player.role;return player;
-	                });
-	                votes = state.players.filter(function (player) {
-	                    return active_role_1 === player.role;
-	                }).map(function (player) {
-	                    return { who_token: player.token, for_whom_token: null };
-	                });
-	                time_last_update_players = Date.now();
-	            }
-	            return _.extend({}, state, {
-	                time_last_update: Date.now(),
-	                status: action.payload.status,
-	                vote_variants: vote_variants,
-	                votes: votes,
-	                time_last_update_players: time_last_update_players
-	            });
+	            return GameStatusReducer_1["default"](state, action);
 	        case GameAction_1["default"].VOTE:
 	            if (state.votes.length && !~_.pluck(state.votes, 'who_token').indexOf(action.payload.who_token)) {
 	                return state;
 	            }
-	            return _.extend({}, state, {
+	            return States_1.getNewState(state, [], {
 	                votes: state.votes.map(function (vote) {
-	                    return action.payload.who_token === vote.who_token ? _.extend({}, vote, { for_whom_token: action.payload.for_whom_token }) : vote;
+	                    return action.payload.who_token === vote.who_token ? _.extend({ for_whom_token: action.payload.for_whom_token }, vote) : vote;
 	                })
 	            });
 	        default:
@@ -168,98 +122,43 @@
 	exports.__esModule = true;
 	exports["default"] = GameReducer;
 
+
 /***/ },
 /* 2 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
+	var _ = __webpack_require__(3);
+	exports.InitialGameState = {
+	    time_last_update: 0,
+	    time_last_update_players: 0,
+	    time_create: 0,
+	    status: null,
+	    players: [],
+	    active_roles: null,
+	    round_number: 0,
+	    vote_variants: [],
+	    votes: [],
+	    round_data: null
+	};
+	exports.InitialRoomState = {
+	    time_last_update: 0,
+	    time_last_update_players: 0,
+	    time_create: 0,
+	    status: null,
+	    players: [],
+	    is_ready: false
+	};
+	function getNewState(old_state, time_keys, piece_of_new_state) {
+	    var time_state = {};
+	    time_keys.forEach(function (time_key) { time_state[time_key] = Date.now(); });
+	    return _.extend({}, old_state, time_state, piece_of_new_state);
+	}
+	exports.getNewState = getNewState;
 
-	var GameAction;
-	(function (GameAction) {
-	    GameAction[GameAction["CREATE_GAME"] = 0] = "CREATE_GAME";
-	    GameAction[GameAction["NEXT_GAME_STEP"] = 1] = "NEXT_GAME_STEP";
-	    GameAction[GameAction["VOTE"] = 2] = "VOTE";
-	})(GameAction || (GameAction = {}));
-	var GameAction;
-	(function (GameAction) {
-	    function createGame(players) {
-	        return {
-	            type: GameAction.CREATE_GAME,
-	            payload: { players: players }
-	        };
-	    }
-	    GameAction.createGame = createGame;
-	    function nextGameStep(status) {
-	        return {
-	            type: GameAction.NEXT_GAME_STEP,
-	            payload: { status: status }
-	        };
-	    }
-	    GameAction.nextGameStep = nextGameStep;
-	    function vote(who_token, for_whom_token) {
-	        return {
-	            type: GameAction.VOTE,
-	            payload: { who_token: who_token, for_whom_token: for_whom_token }
-	        };
-	    }
-	    GameAction.vote = vote;
-	})(GameAction || (GameAction = {}));
-	exports.__esModule = true;
-	exports["default"] = GameAction;
 
 /***/ },
 /* 3 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-
-	var Roles_1 = __webpack_require__(4);
-	exports.GameStatus = {
-	    DAY_AFTER_NIGHT: 'day_after_night',
-	    DAY_BEFORE_NIGHT: 'day_before_night'
-	};
-	var vote_prefix = 'vote_';
-	var asleep_prefix = 'fall_asleep_';
-	var wakeup_prefix = 'wake_up_';
-	Roles_1.RolesKeys.forEach(function (key) {
-	    exports.GameStatus["" + asleep_prefix.toUpperCase() + key] = "" + asleep_prefix + key.toLowerCase();
-	    exports.GameStatus["" + wakeup_prefix.toUpperCase() + key] = "" + wakeup_prefix + key.toLowerCase();
-	    exports.GameStatus["" + vote_prefix.toUpperCase() + key] = "" + vote_prefix + key.toLowerCase();
-	});
-	var GameStatusHelpers;
-	(function (GameStatusHelpers) {
-	    function getActiveRole(game_status) {
-	        if (!~game_status.indexOf('vote')) {
-	            return null;
-	        }
-	        return Roles_1["default"][game_status.replace(vote_prefix, '').toUpperCase()];
-	    }
-	    GameStatusHelpers.getActiveRole = getActiveRole;
-	})(GameStatusHelpers = exports.GameStatusHelpers || (exports.GameStatusHelpers = {}));
-
-/***/ },
-/* 4 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-
-	var _ = __webpack_require__(5);
-	var Roles;
-	(function (Roles) {
-	    Roles[Roles["INHABITANT"] = 0] = "INHABITANT";
-	    Roles[Roles["MAFIA"] = 1] = "MAFIA";
-	    Roles[Roles["DOCTOR"] = 2] = "DOCTOR";
-	    Roles[Roles["COMMISSAR"] = 3] = "COMMISSAR";
-	    Roles[Roles["WHORE"] = 4] = "WHORE";
-	})(Roles || (Roles = {}));
-	exports.RolesKeys = _.keys(Roles).filter(function (key) {
-	    return _.isNaN(+key);
-	});
-	exports.__esModule = true;
-	exports["default"] = Roles;
-
-/***/ },
-/* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;//     Underscore.js 1.8.3
@@ -1813,45 +1712,469 @@
 
 
 /***/ },
-/* 6 */
+/* 4 */
+/***/ function(module, exports) {
+
+	"use strict";
+	var GameAction;
+	(function (GameAction) {
+	    GameAction[GameAction["CREATE_GAME"] = 0] = "CREATE_GAME";
+	    GameAction[GameAction["NEXT_GAME_STEP"] = 1] = "NEXT_GAME_STEP";
+	    GameAction[GameAction["VOTE"] = 2] = "VOTE";
+	})(GameAction || (GameAction = {}));
+	var GameAction;
+	(function (GameAction) {
+	    function createGame(players) {
+	        return {
+	            type: GameAction.CREATE_GAME,
+	            payload: { players: players }
+	        };
+	    }
+	    GameAction.createGame = createGame;
+	    function nextGameStep(status) {
+	        return {
+	            type: GameAction.NEXT_GAME_STEP,
+	            payload: { status: status }
+	        };
+	    }
+	    GameAction.nextGameStep = nextGameStep;
+	    function vote(who_token, for_whom_token) {
+	        return {
+	            type: GameAction.VOTE,
+	            payload: { who_token: who_token, for_whom_token: for_whom_token }
+	        };
+	    }
+	    GameAction.vote = vote;
+	})(GameAction || (GameAction = {}));
+	exports.__esModule = true;
+	exports["default"] = GameAction;
+
+
+/***/ },
+/* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
+	var Roles_1 = __webpack_require__(6);
+	var _ = __webpack_require__(3);
+	(function (GameStatus) {
+	    GameStatus[GameStatus["START_THE_GAME"] = 0] = "START_THE_GAME";
+	    GameStatus[GameStatus["DAY_AFTER_NIGHT"] = 1] = "DAY_AFTER_NIGHT";
+	    GameStatus[GameStatus["DAY_BEFORE_NIGHT"] = 2] = "DAY_BEFORE_NIGHT";
+	    GameStatus[GameStatus["WAKE_UP_INHABITANT"] = 3] = "WAKE_UP_INHABITANT";
+	    GameStatus[GameStatus["VOTE_INHABITANT"] = 4] = "VOTE_INHABITANT";
+	    GameStatus[GameStatus["FALL_ASLEEP_INHABITANT"] = 5] = "FALL_ASLEEP_INHABITANT";
+	    GameStatus[GameStatus["WAKE_UP_MAFIA"] = 6] = "WAKE_UP_MAFIA";
+	    GameStatus[GameStatus["VOTE_MAFIA"] = 7] = "VOTE_MAFIA";
+	    GameStatus[GameStatus["FALL_ASLEEP_MAFIA"] = 8] = "FALL_ASLEEP_MAFIA";
+	    GameStatus[GameStatus["WAKE_UP_DOCTOR"] = 9] = "WAKE_UP_DOCTOR";
+	    GameStatus[GameStatus["VOTE_DOCTOR"] = 10] = "VOTE_DOCTOR";
+	    GameStatus[GameStatus["FALL_ASLEEP_DOCTOR"] = 11] = "FALL_ASLEEP_DOCTOR";
+	    GameStatus[GameStatus["WAKE_UP_WHORE"] = 12] = "WAKE_UP_WHORE";
+	    GameStatus[GameStatus["VOTE_WHORE"] = 13] = "VOTE_WHORE";
+	    GameStatus[GameStatus["FALL_ASLEEP_WHORE"] = 14] = "FALL_ASLEEP_WHORE";
+	    GameStatus[GameStatus["WAKE_UP_COMMISSAR"] = 15] = "WAKE_UP_COMMISSAR";
+	    GameStatus[GameStatus["VOTE_COMMISSAR"] = 16] = "VOTE_COMMISSAR";
+	    GameStatus[GameStatus["FALL_ASLEEP_COMMISSAR"] = 17] = "FALL_ASLEEP_COMMISSAR";
+	})(exports.GameStatus || (exports.GameStatus = {}));
+	var GameStatus = exports.GameStatus;
+	var GameStatusHelpers;
+	(function (GameStatusHelpers) {
+	    function getActiveRole(game_status) {
+	        switch (game_status) {
+	            case GameStatus.VOTE_MAFIA:
+	                return [Roles_1["default"].MAFIA];
+	            case GameStatus.VOTE_DOCTOR:
+	                return [Roles_1["default"].DOCTOR];
+	            case GameStatus.VOTE_WHORE:
+	                return [Roles_1["default"].WHORE];
+	            case GameStatus.VOTE_COMMISSAR:
+	                return [Roles_1["default"].COMMISSAR];
+	            case GameStatus.VOTE_INHABITANT:
+	                return [Roles_1["default"].MAFIA, Roles_1["default"].DOCTOR, Roles_1["default"].INHABITANT, Roles_1["default"].WHORE, Roles_1["default"].COMMISSAR];
+	            default:
+	                return null;
+	        }
+	    }
+	    GameStatusHelpers.getActiveRole = getActiveRole;
+	    function getNextStatus(state) {
+	        switch (state.status) {
+	            case GameStatus.START_THE_GAME:
+	            case GameStatus.DAY_BEFORE_NIGHT:
+	                return GameStatus.FALL_ASLEEP_INHABITANT;
+	            case GameStatus.WAKE_UP_INHABITANT:
+	                return GameStatus.DAY_AFTER_NIGHT;
+	            case GameStatus.DAY_AFTER_NIGHT:
+	                return GameStatus.VOTE_INHABITANT;
+	            case GameStatus.VOTE_INHABITANT:
+	                return GameStatus.DAY_BEFORE_NIGHT;
+	            case GameStatus.FALL_ASLEEP_INHABITANT:
+	                return GameStatus.WAKE_UP_MAFIA;
+	            case GameStatus.WAKE_UP_MAFIA:
+	                return GameStatus.VOTE_MAFIA;
+	            case GameStatus.VOTE_MAFIA:
+	                return GameStatus.FALL_ASLEEP_MAFIA;
+	            case GameStatus.WAKE_UP_DOCTOR:
+	                return GameStatus.VOTE_DOCTOR;
+	            case GameStatus.VOTE_DOCTOR:
+	                return GameStatus.FALL_ASLEEP_DOCTOR;
+	            case GameStatus.WAKE_UP_WHORE:
+	                return GameStatus.VOTE_WHORE;
+	            case GameStatus.VOTE_WHORE:
+	                return GameStatus.FALL_ASLEEP_WHORE;
+	            case GameStatus.WAKE_UP_COMMISSAR:
+	                return GameStatus.VOTE_COMMISSAR;
+	            case GameStatus.VOTE_COMMISSAR:
+	                return GameStatus.FALL_ASLEEP_COMMISSAR;
+	            case GameStatus.FALL_ASLEEP_COMMISSAR:
+	                return GameStatus.WAKE_UP_INHABITANT;
+	            case GameStatus.FALL_ASLEEP_MAFIA:
+	                if (_.findWhere(state.players, { role: Roles_1["default"].DOCTOR })) {
+	                    return GameStatus.WAKE_UP_DOCTOR;
+	                }
+	                if (_.findWhere(state.players, { role: Roles_1["default"].WHORE })) {
+	                    return GameStatus.WAKE_UP_WHORE;
+	                }
+	                if (_.findWhere(state.players, { role: Roles_1["default"].COMMISSAR })) {
+	                    return GameStatus.WAKE_UP_COMMISSAR;
+	                }
+	                return GameStatus.WAKE_UP_INHABITANT;
+	            case GameStatus.FALL_ASLEEP_DOCTOR:
+	                if (_.findWhere(state.players, { role: Roles_1["default"].WHORE })) {
+	                    return GameStatus.WAKE_UP_WHORE;
+	                }
+	                if (_.findWhere(state.players, { role: Roles_1["default"].COMMISSAR })) {
+	                    return GameStatus.WAKE_UP_COMMISSAR;
+	                }
+	                return GameStatus.WAKE_UP_INHABITANT;
+	            case GameStatus.FALL_ASLEEP_WHORE:
+	                if (_.findWhere(state.players, { role: Roles_1["default"].COMMISSAR })) {
+	                    return GameStatus.WAKE_UP_COMMISSAR;
+	                }
+	                return GameStatus.WAKE_UP_INHABITANT;
+	        }
+	    }
+	    GameStatusHelpers.getNextStatus = getNextStatus;
+	})(GameStatusHelpers = exports.GameStatusHelpers || (exports.GameStatusHelpers = {}));
 
-	var Roles_1 = __webpack_require__(4);
+
+/***/ },
+/* 6 */
+/***/ function(module, exports) {
+
+	"use strict";
+	var Roles;
+	(function (Roles) {
+	    Roles[Roles["INHABITANT"] = 0] = "INHABITANT";
+	    Roles[Roles["MAFIA"] = 1] = "MAFIA";
+	    Roles[Roles["DOCTOR"] = 2] = "DOCTOR";
+	    Roles[Roles["COMMISSAR"] = 3] = "COMMISSAR";
+	    Roles[Roles["WHORE"] = 4] = "WHORE";
+	})(Roles || (Roles = {}));
+	exports.__esModule = true;
+	exports["default"] = Roles;
+
+
+/***/ },
+/* 7 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	var States_1 = __webpack_require__(2);
+	var GameStatus_1 = __webpack_require__(5);
+	var Player_1 = __webpack_require__(8);
+	var _ = __webpack_require__(3);
+	var Roles_1 = __webpack_require__(6);
+	var helpers_1 = __webpack_require__(10);
+	function GameStatusReducer(state, action) {
+	    if (state === void 0) { state = States_1.InitialGameState; }
+	    var round_data = state.round_data || {};
+	    var players = state.players;
+	    var win_role;
+	    switch (action.payload.status) {
+	        case GameStatus_1.GameStatus.DAY_BEFORE_NIGHT:
+	            var execution = '';
+	            if (state.votes.length) {
+	                execution = helpers_1.getMaxRepeatValue(_.pluck(state.votes, 'for_whom_token'));
+	            }
+	            if (Player_1.Player.isEqualMafiaAndOthers(state.players, execution)) {
+	                win_role = Roles_1["default"].MAFIA;
+	            }
+	            if (!Player_1.Player.hasMafia(state.players, execution)) {
+	                win_role = Roles_1["default"].INHABITANT;
+	            }
+	            return States_1.getNewState(state, ['time_last_update', 'time_last_update_players'], {
+	                status: action.payload.status,
+	                round_data: { execution: execution },
+	                votes: [],
+	                vote_variants: [],
+	                win_role: win_role,
+	                active_roles: null
+	            });
+	        case GameStatus_1.GameStatus.DAY_AFTER_NIGHT:
+	            if (!_.isEmpty(round_data.killed)) {
+	                players = players.filter(function (player) { return !~round_data.killed.indexOf(player.token); });
+	            }
+	            if (Player_1.Player.isEqualMafiaAndOthers(players)) {
+	                win_role = Roles_1["default"].MAFIA;
+	            }
+	            return States_1.getNewState(state, ['time_last_update'], {
+	                status: action.payload.status,
+	                players: players,
+	                win_role: win_role
+	            });
+	        case GameStatus_1.GameStatus.FALL_ASLEEP_INHABITANT:
+	            if (state.round_data && state.round_data.execution) {
+	                players = players.filter(function (player) { return player.token !== state.round_data.execution; });
+	            }
+	            return States_1.getNewState(state, ['time_last_update'], {
+	                status: action.payload.status,
+	                round_data: null,
+	                players: players,
+	                round_number: ++state.round_number
+	            });
+	        case GameStatus_1.GameStatus.WAKE_UP_INHABITANT:
+	            round_data = _.clone(state.round_data);
+	            round_data.killed = [];
+	            round_data.killed = round_data.killed.concat(round_data.mafia_target);
+	            var whore = _.findWhere(state.players, { role: Roles_1["default"].WHORE });
+	            if (whore && whore.token === round_data.mafia_target) {
+	                round_data.killed = round_data.killed.concat(round_data.real_man);
+	            }
+	            if (round_data.mafia_target === round_data.real_man) {
+	                round_data.killed = [];
+	            }
+	            if (~round_data.killed.indexOf(round_data.healing)) {
+	                round_data.killed = _.without(round_data.killed, round_data.healing);
+	            }
+	            return States_1.getNewState(state, ['time_last_update', 'time_last_update_players'], {
+	                status: action.payload.status,
+	                round_data: round_data
+	            });
+	        case GameStatus_1.GameStatus.VOTE_COMMISSAR:
+	        case GameStatus_1.GameStatus.VOTE_MAFIA:
+	        case GameStatus_1.GameStatus.VOTE_INHABITANT:
+	        case GameStatus_1.GameStatus.VOTE_DOCTOR:
+	        case GameStatus_1.GameStatus.VOTE_WHORE:
+	            var active_roles_1 = GameStatus_1.GameStatusHelpers.getActiveRole(action.payload.status), vote_variants = state.players
+	                .filter(function (player) {
+	                if (GameStatus_1.GameStatus.VOTE_DOCTOR === action.payload.status) {
+	                    return state.prev_round_healing ? state.prev_round_healing !== player.token : true;
+	                }
+	                if (GameStatus_1.GameStatus.VOTE_INHABITANT === action.payload.status) {
+	                    return true;
+	                }
+	                return !~active_roles_1.indexOf(player.role);
+	            })
+	                .map(function (player) { return player.token; }), votes = state.players
+	                .filter(function (player) { return !!~active_roles_1.indexOf(player.role); })
+	                .map(function (player) { return ({ who_token: player.token }); });
+	            return States_1.getNewState(state, ['time_last_update', 'time_last_update_players'], {
+	                status: action.payload.status,
+	                active_roles: active_roles_1,
+	                vote_variants: vote_variants,
+	                votes: votes
+	            });
+	        case GameStatus_1.GameStatus.FALL_ASLEEP_MAFIA:
+	        case GameStatus_1.GameStatus.FALL_ASLEEP_DOCTOR:
+	        case GameStatus_1.GameStatus.FALL_ASLEEP_WHORE:
+	            var vote_result = helpers_1.getMaxRepeatValue(_.pluck(state.votes, 'for_whom_token')), prev_round_healing = void 0;
+	            switch (action.payload.status) {
+	                case GameStatus_1.GameStatus.FALL_ASLEEP_DOCTOR:
+	                    round_data.healing = prev_round_healing = vote_result;
+	                    break;
+	                case GameStatus_1.GameStatus.FALL_ASLEEP_MAFIA:
+	                    round_data.mafia_target = vote_result;
+	                    break;
+	                case GameStatus_1.GameStatus.FALL_ASLEEP_WHORE:
+	                    round_data.real_man = vote_result;
+	                    break;
+	            }
+	            return States_1.getNewState(state, ['time_last_update'], {
+	                status: action.payload.status,
+	                round_data: round_data,
+	                prev_round_healing: prev_round_healing,
+	                votes: [],
+	                vote_variants: [],
+	                active_roles: null
+	            });
+	        case GameStatus_1.GameStatus.FALL_ASLEEP_COMMISSAR:
+	            return States_1.getNewState(state, ['time_last_update'], {
+	                status: action.payload.status,
+	                votes: [],
+	                vote_variants: [],
+	                active_roles: null
+	            });
+	        case GameStatus_1.GameStatus.WAKE_UP_MAFIA:
+	        case GameStatus_1.GameStatus.WAKE_UP_DOCTOR:
+	        case GameStatus_1.GameStatus.WAKE_UP_WHORE:
+	        case GameStatus_1.GameStatus.WAKE_UP_COMMISSAR:
+	            return States_1.getNewState(state, ['time_last_update'], {
+	                status: action.payload.status
+	            });
+	        default:
+	            return state;
+	    }
+	}
+	exports.__esModule = true;
+	exports["default"] = GameStatusReducer;
+
+
+/***/ },
+/* 8 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	var Roles_1 = __webpack_require__(6);
+	var _ = __webpack_require__(3);
+	var GameEnvironment_1 = __webpack_require__(9);
+	var Player;
+	(function (Player) {
+	    Player.Avatars = {
+	        path: '/public/img/avatars/',
+	        variants: [
+	            'lady.png',
+	            'black.png'
+	        ]
+	    };
+	    function RolesForPlayers(players) {
+	        var steps = Math.floor((players.length - GameEnvironment_1.MIN_PLAYERS) / GameEnvironment_1.STEP_CHANGE_ROLES) + 1, game_players = _.shuffle(players).map(function (player) { return _.extend({ role: Roles_1["default"].INHABITANT }, player); }), flag_commissar = false, index = 0;
+	        game_players[index++].role = Roles_1["default"].DOCTOR;
+	        game_players[index++].role = Roles_1["default"].WHORE;
+	        while (steps--) {
+	            game_players[index++].role = Roles_1["default"].MAFIA;
+	            if (steps % 2 !== 0) {
+	                if (!flag_commissar) {
+	                    game_players[index++].role = Roles_1["default"].COMMISSAR;
+	                    flag_commissar = true;
+	                }
+	            }
+	        }
+	        return game_players;
+	    }
+	    Player.RolesForPlayers = RolesForPlayers;
+	    function isEqualMafiaAndOthers(players, remove_in_future_token) {
+	        if (players === void 0) { players = []; }
+	        var mafia_count = 0, others_count = 0;
+	        players.forEach(function (player) {
+	            if (remove_in_future_token === player.token)
+	                return;
+	            if (player.role === Roles_1["default"].MAFIA) {
+	                mafia_count++;
+	            }
+	            else {
+	                others_count++;
+	            }
+	        });
+	        return players.length && mafia_count === others_count;
+	    }
+	    Player.isEqualMafiaAndOthers = isEqualMafiaAndOthers;
+	    function hasMafia(players, remove_in_future_token) {
+	        if (players === void 0) { players = []; }
+	        var mafia_count = 0;
+	        players.forEach(function (player) {
+	            if (remove_in_future_token === player.token)
+	                return;
+	            if (player.role === Roles_1["default"].MAFIA) {
+	                mafia_count++;
+	            }
+	        });
+	        return players.length && !!mafia_count;
+	    }
+	    Player.hasMafia = hasMafia;
+	})(Player = exports.Player || (exports.Player = {}));
+
+
+/***/ },
+/* 9 */
+/***/ function(module, exports) {
+
+	"use strict";
+	exports.MIN_PLAYERS = 5;
+	exports.STEP_CHANGE_ROLES = 2;
+
+
+/***/ },
+/* 10 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	var _ = __webpack_require__(3);
+	function getMaxRepeatValue(arr) {
+	    var obj = {
+	        max: {
+	            count: 0,
+	            value: ''
+	        }
+	    };
+	    _.shuffle(arr).forEach(function (val) {
+	        obj[val] = obj[val] || 0;
+	        obj[val]++;
+	        if (obj[val] > obj.max.count) {
+	            obj.max.count = obj[val];
+	            obj.max.value = val;
+	        }
+	    });
+	    return obj.max.value;
+	}
+	exports.getMaxRepeatValue = getMaxRepeatValue;
+
+
+/***/ },
+/* 11 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	var Roles_1 = __webpack_require__(6);
 	exports.INITIAL_NAME = 'Bob';
 	exports.INITIAL_AVATAR = '/avatar.png';
 	exports.INITIAL_TOKEN = 'a257dc9';
 	function getPlayer(_a) {
-	    var _b = _a === void 0 ? {} : _a,
-	        _c = _b.name,
-	        name = _c === void 0 ? exports.INITIAL_NAME : _c,
-	        _d = _b.avatar,
-	        avatar = _d === void 0 ? exports.INITIAL_AVATAR : _d,
-	        _e = _b.token,
-	        token = _e === void 0 ? exports.INITIAL_TOKEN : _e;
+	    var _b = _a === void 0 ? {} : _a, _c = _b.name, name = _c === void 0 ? exports.INITIAL_NAME : _c, _d = _b.avatar, avatar = _d === void 0 ? exports.INITIAL_AVATAR : _d, _e = _b.token, token = _e === void 0 ? exports.INITIAL_TOKEN : _e;
 	    return { name: name, avatar: avatar, token: token };
 	}
 	exports.getPlayer = getPlayer;
 	function getGamePlayer(_a) {
-	    var _b = _a === void 0 ? {} : _a,
-	        _c = _b.name,
-	        name = _c === void 0 ? exports.INITIAL_NAME : _c,
-	        _d = _b.avatar,
-	        avatar = _d === void 0 ? exports.INITIAL_AVATAR : _d,
-	        _e = _b.token,
-	        token = _e === void 0 ? exports.INITIAL_TOKEN : _e,
-	        _f = _b.role,
-	        role = _f === void 0 ? Roles_1["default"].INHABITANT : _f;
+	    var _b = _a === void 0 ? {} : _a, _c = _b.name, name = _c === void 0 ? exports.INITIAL_NAME : _c, _d = _b.avatar, avatar = _d === void 0 ? exports.INITIAL_AVATAR : _d, _e = _b.token, token = _e === void 0 ? exports.INITIAL_TOKEN : _e, _f = _b.role, role = _f === void 0 ? Roles_1["default"].INHABITANT : _f;
 	    return { name: name, avatar: avatar, token: token, role: role };
 	}
 	exports.getGamePlayer = getGamePlayer;
 	function getGamePlayerArray(len) {
-	    return Array.apply(null, { length: len }).map(function () {
-	        return getGamePlayer();
-	    });
+	    return Array.apply(null, { length: len }).map(function () { return getGamePlayer(); });
 	}
 	exports.getGamePlayerArray = getGamePlayerArray;
+
+
+/***/ },
+/* 12 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	var States_1 = __webpack_require__(2);
+	var PlayersMocks_1 = __webpack_require__(11);
+	function getGameStateAfterVote(votes_array, vote_variants, players_array) {
+	    if (vote_variants === void 0) { vote_variants = ['23434', '32432', 'r43et43']; }
+	    return States_1.getNewState(States_1.InitialGameState, [], { votes: votes_array, vote_variants: vote_variants, players: players_array });
+	}
+	exports.getGameStateAfterVote = getGameStateAfterVote;
+	function getGameStateWithPlayers(players_array) {
+	    return States_1.getNewState(States_1.InitialGameState, [], { players: players_array });
+	}
+	exports.getGameStateWithPlayers = getGameStateWithPlayers;
+	function getGameStateWithPlayersAndExecution(players_array, execution) {
+	    return States_1.getNewState(States_1.InitialGameState, [], { players: players_array, round_data: { execution: execution } });
+	}
+	exports.getGameStateWithPlayersAndExecution = getGameStateWithPlayersAndExecution;
+	function getGameStateWithPlayersAndPrevRoundHealing(players_array, prev_round_healing) {
+	    return States_1.getNewState(States_1.InitialGameState, [], { players: players_array, prev_round_healing: prev_round_healing });
+	}
+	exports.getGameStateWithPlayersAndPrevRoundHealing = getGameStateWithPlayersAndPrevRoundHealing;
+	function getGameStateAfterNight(round_data, players) {
+	    if (players === void 0) { players = [PlayersMocks_1.getGamePlayer(), PlayersMocks_1.getGamePlayer()]; }
+	    return States_1.getNewState(States_1.InitialGameState, [], { round_data: round_data, players: players });
+	}
+	exports.getGameStateAfterNight = getGameStateAfterNight;
+
 
 /***/ }
 /******/ ]);

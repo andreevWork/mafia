@@ -8,13 +8,17 @@ enum RoomAction {
 }
 
 export interface IRoomAction extends IAction {
-    payload? : Player
+    payload? : Player,
+    token?: string,
+    public_url?: string;
 }
 
 namespace RoomAction {
-    export function createRoom(): IRoomAction {
+    export function createRoom(token?: string, public_url?: string): IRoomAction {
         return {
-            type: RoomAction.CREATE_ROOM
+            type: RoomAction.CREATE_ROOM,
+            token,
+            public_url
         }
     }
 

@@ -9,7 +9,7 @@ function getTestEntries() {
         multiply_entries = {},
         test_name_reg = /\/(\w+Test)/i,
         entries = fs.readdirSync(test_dir_initial),
-        prev_dir, test_name;
+        prev_dir = [], test_name;
 
     _.flatten(entries.map(getFilesRecursive))
         .filter(minimatch.filter('**/*Test.ts'))
@@ -21,27 +21,27 @@ function getTestEntries() {
             multiply_entries[test_name] = './' + path;
         });
 
-    //console.log(multiply_entries);
+    // console.log(multiply_entries);
 
     return multiply_entries;
     
     function getFilesRecursive(dir) {
         var stat =  fs.statSync(path.join(current_dir, dir)),
             entries;
-        
+
         // Если не директория, значит файл, просто возвращаем
         if(!stat.isDirectory()) return path.join(current_dir, dir);
         
         // Запоминаем текущую директорию
-        prev_dir = current_dir;
+        prev_dir.push(current_dir);
         // Текущую директорию соединяем с переданной для того, чтобы использовать дальше в рекурсии
         current_dir = path.join(current_dir, dir);
         
         entries = fs.readdirSync(current_dir).map(getFilesRecursive);
         
         // Восстанавливаем текущую директорию, после возвращения из рекурсии
-        current_dir = prev_dir;
-        
+        current_dir = prev_dir.pop();
+
         return entries;
 
     }
@@ -50,7 +50,7 @@ function getTestEntries() {
 module.exports = {
     entry: getTestEntries(),
     output: {
-        filename: "./_test/_build/[name].js"
+        filename: "./_test/_build/unit/[name].js"
     },
 
     resolve: {
@@ -61,12 +61,8 @@ module.exports = {
         loaders: [
             {
                 test: /\.ts$/,
-                loader: "babel!ts"
+                loader: "ts"
             }
         ]
-    },
-    babel : {
-        presets: ['es2015'],
-        plugins: ['transform-object-assign']
     }
 };

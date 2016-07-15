@@ -45,73 +45,122 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
-
-	var RoomReducer_1 = __webpack_require__(9);
-	var RoomStatus_1 = __webpack_require__(11);
-	var RoomAction_1 = __webpack_require__(10);
-	var PlayersMocks_1 = __webpack_require__(6);
-	describe('RoomReducer', function () {
-	    var state, now, player;
-	    beforeEach(function () {
-	        now = Date.now();
+	var Player_1 = __webpack_require__(8);
+	var PlayersMocks_1 = __webpack_require__(11);
+	var _ = __webpack_require__(3);
+	var Roles_1 = __webpack_require__(6);
+	var GameEnvironment_1 = __webpack_require__(9);
+	var isEqualMafiaAndOthers = Player_1.Player.isEqualMafiaAndOthers, hasMafia = Player_1.Player.hasMafia;
+	describe('RolesForPlayers', function () {
+	    var players, game_players, roles_array, count_roles, mafia_count, doctor_count, whore_count, commissar_count;
+	    var arr = [
+	        GameEnvironment_1.MIN_PLAYERS,
+	        GameEnvironment_1.MIN_PLAYERS + 1,
+	        GameEnvironment_1.MIN_PLAYERS + GameEnvironment_1.STEP_CHANGE_ROLES,
+	        GameEnvironment_1.MIN_PLAYERS + GameEnvironment_1.STEP_CHANGE_ROLES + 1,
+	        GameEnvironment_1.MIN_PLAYERS + GameEnvironment_1.STEP_CHANGE_ROLES + GameEnvironment_1.STEP_CHANGE_ROLES,
+	        GameEnvironment_1.MIN_PLAYERS + GameEnvironment_1.STEP_CHANGE_ROLES + GameEnvironment_1.STEP_CHANGE_ROLES + GameEnvironment_1.STEP_CHANGE_ROLES + 1,
+	    ];
+	    arr.forEach(function (count_players) {
+	        it("\u0442\u0435\u0441\u0442 \u0441 \u0447\u0438\u0441\u043B\u043E\u043C \u0438\u0433\u0440\u043E\u043A\u043E\u0432 \u0440\u0430\u0432\u043D\u044B\u043C " + count_players, function () {
+	            players = Array.apply(null, { length: count_players }).map(function () { return PlayersMocks_1.getPlayer(); });
+	            game_players = Player_1.Player.RolesForPlayers(players);
+	            roles_array = _.pluck(game_players, 'role');
+	            count_roles = _.countBy(roles_array, _.identity);
+	            count_roles[Roles_1["default"].COMMISSAR] = count_roles[Roles_1["default"].COMMISSAR] || 0;
+	            count_roles[Roles_1["default"].WHORE] = count_roles[Roles_1["default"].WHORE] || 0;
+	            mafia_count = Math.floor((count_players - GameEnvironment_1.MIN_PLAYERS) / GameEnvironment_1.STEP_CHANGE_ROLES) + 1;
+	            doctor_count = 1;
+	            whore_count = 1;
+	            commissar_count = count_players >= GameEnvironment_1.MIN_PLAYERS + GameEnvironment_1.STEP_CHANGE_ROLES ? 1 : 0;
+	            expect(count_roles[Roles_1["default"].MAFIA]).toBe(mafia_count);
+	            expect(count_roles[Roles_1["default"].DOCTOR]).toBe(doctor_count);
+	            expect(count_roles[Roles_1["default"].COMMISSAR]).toBe(commissar_count);
+	            expect(count_roles[Roles_1["default"].WHORE]).toBe(whore_count);
+	            expect(count_roles[Roles_1["default"].INHABITANT]).toBe(count_players - mafia_count - doctor_count - commissar_count - whore_count);
+	        });
 	    });
-	    it('initial state', function () {
-	        state = RoomReducer_1["default"](undefined, { type: 'test_initial' });
-	        expect(state).toEqual(RoomReducer_1.InitialRoomState);
+	    it('isEqualMafiaAndOthers simple', function () {
+	        var players = [
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].MAFIA }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].MAFIA }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT })
+	        ];
+	        expect(isEqualMafiaAndOthers(players)).toBeFalsy();
+	        players = [
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].MAFIA }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].MAFIA }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].DOCTOR })
+	        ];
+	        expect(isEqualMafiaAndOthers(players)).toBeTruthy();
 	    });
-	    it('create room', function () {
-	        state = RoomReducer_1["default"](undefined, { type: RoomAction_1["default"].CREATE_ROOM });
-	        expect(state.time_create).not.toBeLessThan(now);
-	        expect(state.time_last_update).not.toBeLessThan(now);
-	        expect(state.status).toBe(RoomStatus_1["default"].WAITING_PLAYERS);
-	        expect(state.players.length).toBe(0);
+	    it('isEqualMafiaAndOthers with remove parametr', function () {
+	        var token_1 = '23423', players = [
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].MAFIA }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT, token: token_1 }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT })
+	        ];
+	        expect(isEqualMafiaAndOthers(players, token_1)).toBeFalsy();
+	        expect(isEqualMafiaAndOthers(players)).toBeFalsy();
+	        players = [
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].MAFIA }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].MAFIA }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT, token: token_1 }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].DOCTOR })
+	        ];
+	        expect(isEqualMafiaAndOthers(players)).toBeFalsy();
+	        expect(isEqualMafiaAndOthers(players, token_1)).toBeTruthy();
 	    });
-	    it('add players', function () {
-	        player = PlayersMocks_1.getPlayer('Bob');
-	        state = RoomReducer_1["default"](undefined, { type: RoomAction_1["default"].ADD_PLAYER, payload: player });
-	        expect(state.players.length).toEqual(1);
-	        expect(state.players[0]).toEqual(player);
-	        expect(state.time_last_update).not.toBeLessThan(now);
-	        player = PlayersMocks_1.getPlayer('Rob');
-	        now = Date.now();
-	        state = RoomReducer_1["default"](state, { type: RoomAction_1["default"].ADD_PLAYER, payload: player });
-	        expect(state.players.length).toEqual(2);
-	        expect(state.players[1]).toEqual(player);
-	        expect(state.time_last_update).not.toBeLessThan(now);
+	    it('hasMafia simple', function () {
+	        var players = [
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].COMMISSAR }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].DOCTOR }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT })
+	        ];
+	        expect(hasMafia(players)).toBeFalsy();
+	        players = [
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].MAFIA }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].MAFIA }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].DOCTOR })
+	        ];
+	        expect(hasMafia(players)).toBeTruthy();
 	    });
-	    it('start play', function () {
-	        state = RoomReducer_1["default"](undefined, { type: RoomAction_1["default"].START_PLAY });
-	        expect(state.status).toBe(RoomStatus_1["default"].PLAYING);
-	        expect(state.time_last_update).not.toBeLessThan(now);
+	    it('hasMafia with remove parametr', function () {
+	        var token_1 = '23423', players = [
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].MAFIA }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT, token: token_1 }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT })
+	        ];
+	        expect(hasMafia(players, token_1)).toBeTruthy();
+	        expect(hasMafia(players)).toBeTruthy();
+	        players = [
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].MAFIA, token: token_1 }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].DOCTOR })
+	        ];
+	        expect(hasMafia(players)).toBeTruthy();
+	        expect(hasMafia(players, token_1)).toBeFalsy();
 	    });
 	});
+
 
 /***/ },
 /* 1 */,
 /* 2 */,
-/* 3 */,
-/* 4 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-
-	var _ = __webpack_require__(5);
-	var Roles;
-	(function (Roles) {
-	    Roles[Roles["INHABITANT"] = 0] = "INHABITANT";
-	    Roles[Roles["MAFIA"] = 1] = "MAFIA";
-	    Roles[Roles["DOCTOR"] = 2] = "DOCTOR";
-	    Roles[Roles["COMMISSAR"] = 3] = "COMMISSAR";
-	    Roles[Roles["WHORE"] = 4] = "WHORE";
-	})(Roles || (Roles = {}));
-	exports.RolesKeys = _.keys(Roles).filter(function (key) {
-	    return _.isNaN(+key);
-	});
-	exports.__esModule = true;
-	exports["default"] = Roles;
-
-/***/ },
-/* 5 */
+/* 3 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;//     Underscore.js 1.8.3
@@ -1665,148 +1714,124 @@
 
 
 /***/ },
+/* 4 */,
+/* 5 */,
 /* 6 */
+/***/ function(module, exports) {
+
+	"use strict";
+	var Roles;
+	(function (Roles) {
+	    Roles[Roles["INHABITANT"] = 0] = "INHABITANT";
+	    Roles[Roles["MAFIA"] = 1] = "MAFIA";
+	    Roles[Roles["DOCTOR"] = 2] = "DOCTOR";
+	    Roles[Roles["COMMISSAR"] = 3] = "COMMISSAR";
+	    Roles[Roles["WHORE"] = 4] = "WHORE";
+	})(Roles || (Roles = {}));
+	exports.__esModule = true;
+	exports["default"] = Roles;
+
+
+/***/ },
+/* 7 */,
+/* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
+	var Roles_1 = __webpack_require__(6);
+	var _ = __webpack_require__(3);
+	var GameEnvironment_1 = __webpack_require__(9);
+	var Player;
+	(function (Player) {
+	    Player.Avatars = {
+	        path: '/public/img/avatars/',
+	        variants: [
+	            'lady.png',
+	            'black.png'
+	        ]
+	    };
+	    function RolesForPlayers(players) {
+	        var steps = Math.floor((players.length - GameEnvironment_1.MIN_PLAYERS) / GameEnvironment_1.STEP_CHANGE_ROLES) + 1, game_players = _.shuffle(players).map(function (player) { return _.extend({ role: Roles_1["default"].INHABITANT }, player); }), flag_commissar = false, index = 0;
+	        game_players[index++].role = Roles_1["default"].DOCTOR;
+	        game_players[index++].role = Roles_1["default"].WHORE;
+	        while (steps--) {
+	            game_players[index++].role = Roles_1["default"].MAFIA;
+	            if (steps % 2 !== 0) {
+	                if (!flag_commissar) {
+	                    game_players[index++].role = Roles_1["default"].COMMISSAR;
+	                    flag_commissar = true;
+	                }
+	            }
+	        }
+	        return game_players;
+	    }
+	    Player.RolesForPlayers = RolesForPlayers;
+	    function isEqualMafiaAndOthers(players, remove_in_future_token) {
+	        if (players === void 0) { players = []; }
+	        var mafia_count = 0, others_count = 0;
+	        players.forEach(function (player) {
+	            if (remove_in_future_token === player.token)
+	                return;
+	            if (player.role === Roles_1["default"].MAFIA) {
+	                mafia_count++;
+	            }
+	            else {
+	                others_count++;
+	            }
+	        });
+	        return players.length && mafia_count === others_count;
+	    }
+	    Player.isEqualMafiaAndOthers = isEqualMafiaAndOthers;
+	    function hasMafia(players, remove_in_future_token) {
+	        if (players === void 0) { players = []; }
+	        var mafia_count = 0;
+	        players.forEach(function (player) {
+	            if (remove_in_future_token === player.token)
+	                return;
+	            if (player.role === Roles_1["default"].MAFIA) {
+	                mafia_count++;
+	            }
+	        });
+	        return players.length && !!mafia_count;
+	    }
+	    Player.hasMafia = hasMafia;
+	})(Player = exports.Player || (exports.Player = {}));
 
-	var Roles_1 = __webpack_require__(4);
+
+/***/ },
+/* 9 */
+/***/ function(module, exports) {
+
+	"use strict";
+	exports.MIN_PLAYERS = 5;
+	exports.STEP_CHANGE_ROLES = 2;
+
+
+/***/ },
+/* 10 */,
+/* 11 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	var Roles_1 = __webpack_require__(6);
 	exports.INITIAL_NAME = 'Bob';
 	exports.INITIAL_AVATAR = '/avatar.png';
 	exports.INITIAL_TOKEN = 'a257dc9';
 	function getPlayer(_a) {
-	    var _b = _a === void 0 ? {} : _a,
-	        _c = _b.name,
-	        name = _c === void 0 ? exports.INITIAL_NAME : _c,
-	        _d = _b.avatar,
-	        avatar = _d === void 0 ? exports.INITIAL_AVATAR : _d,
-	        _e = _b.token,
-	        token = _e === void 0 ? exports.INITIAL_TOKEN : _e;
+	    var _b = _a === void 0 ? {} : _a, _c = _b.name, name = _c === void 0 ? exports.INITIAL_NAME : _c, _d = _b.avatar, avatar = _d === void 0 ? exports.INITIAL_AVATAR : _d, _e = _b.token, token = _e === void 0 ? exports.INITIAL_TOKEN : _e;
 	    return { name: name, avatar: avatar, token: token };
 	}
 	exports.getPlayer = getPlayer;
 	function getGamePlayer(_a) {
-	    var _b = _a === void 0 ? {} : _a,
-	        _c = _b.name,
-	        name = _c === void 0 ? exports.INITIAL_NAME : _c,
-	        _d = _b.avatar,
-	        avatar = _d === void 0 ? exports.INITIAL_AVATAR : _d,
-	        _e = _b.token,
-	        token = _e === void 0 ? exports.INITIAL_TOKEN : _e,
-	        _f = _b.role,
-	        role = _f === void 0 ? Roles_1["default"].INHABITANT : _f;
+	    var _b = _a === void 0 ? {} : _a, _c = _b.name, name = _c === void 0 ? exports.INITIAL_NAME : _c, _d = _b.avatar, avatar = _d === void 0 ? exports.INITIAL_AVATAR : _d, _e = _b.token, token = _e === void 0 ? exports.INITIAL_TOKEN : _e, _f = _b.role, role = _f === void 0 ? Roles_1["default"].INHABITANT : _f;
 	    return { name: name, avatar: avatar, token: token, role: role };
 	}
 	exports.getGamePlayer = getGamePlayer;
 	function getGamePlayerArray(len) {
-	    return Array.apply(null, { length: len }).map(function () {
-	        return getGamePlayer();
-	    });
+	    return Array.apply(null, { length: len }).map(function () { return getGamePlayer(); });
 	}
 	exports.getGamePlayerArray = getGamePlayerArray;
 
-/***/ },
-/* 7 */,
-/* 8 */,
-/* 9 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-
-	var RoomAction_1 = __webpack_require__(10);
-	var RoomStatus_1 = __webpack_require__(11);
-	var _ = __webpack_require__(5);
-	exports.InitialRoomState = {
-	    time_last_update: 0,
-	    time_create: 0,
-	    status: null,
-	    players: []
-	};
-	function RoomReducer(state, action) {
-	    if (state === void 0) {
-	        state = exports.InitialRoomState;
-	    }
-	    switch (action.type) {
-	        case RoomAction_1["default"].CREATE_ROOM:
-	            return _.extend({}, state, {
-	                time_create: Date.now(),
-	                time_last_update: Date.now(),
-	                status: RoomStatus_1["default"].WAITING_PLAYERS
-	            });
-	        case RoomAction_1["default"].ADD_PLAYER:
-	            return _.extend({}, state, {
-	                players: state.players.concat(action.payload),
-	                time_last_update: Date.now()
-	            });
-	        case RoomAction_1["default"].START_PLAY:
-	            return _.extend({}, state, {
-	                status: RoomStatus_1["default"].PLAYING,
-	                time_last_update: Date.now()
-	            });
-	        default:
-	            return state;
-	    }
-	}
-	exports.__esModule = true;
-	exports["default"] = RoomReducer;
-
-/***/ },
-/* 10 */
-/***/ function(module, exports) {
-
-	"use strict";
-
-	var RoomAction;
-	(function (RoomAction) {
-	    RoomAction[RoomAction["CREATE_ROOM"] = 0] = "CREATE_ROOM";
-	    RoomAction[RoomAction["ADD_PLAYER"] = 1] = "ADD_PLAYER";
-	    RoomAction[RoomAction["START_PLAY"] = 2] = "START_PLAY";
-	})(RoomAction || (RoomAction = {}));
-	var RoomAction;
-	(function (RoomAction) {
-	    function createRoom() {
-	        return {
-	            type: RoomAction.CREATE_ROOM
-	        };
-	    }
-	    RoomAction.createRoom = createRoom;
-	    function addPlayer(player) {
-	        return {
-	            type: RoomAction.ADD_PLAYER,
-	            payload: player
-	        };
-	    }
-	    RoomAction.addPlayer = addPlayer;
-	    function startPlay() {
-	        return {
-	            type: RoomAction.START_PLAY
-	        };
-	    }
-	    RoomAction.startPlay = startPlay;
-	})(RoomAction || (RoomAction = {}));
-	exports.__esModule = true;
-	exports["default"] = RoomAction;
-
-/***/ },
-/* 11 */
-/***/ function(module, exports) {
-
-	"use strict";
-
-	var RoomStatus;
-	(function (RoomStatus) {
-	    RoomStatus[RoomStatus["WAITING_PLAYERS"] = 0] = "WAITING_PLAYERS";
-	    RoomStatus[RoomStatus["PLAYING"] = 1] = "PLAYING";
-	})(RoomStatus || (RoomStatus = {}));
-	var RoomStatus;
-	(function (RoomStatus) {
-	    function isWaitingPlayers(room_state) {
-	        return room_state === RoomStatus.WAITING_PLAYERS;
-	    }
-	    RoomStatus.isWaitingPlayers = isWaitingPlayers;
-	})(RoomStatus || (RoomStatus = {}));
-	exports.__esModule = true;
-	exports["default"] = RoomStatus;
 
 /***/ }
 /******/ ]);

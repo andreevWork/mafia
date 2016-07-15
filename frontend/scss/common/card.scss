@@ -1,0 +1,30 @@
+@import "mixins.scss";
+
+
+.card {
+  border-radius: 10px;
+  width: 300px;
+  height: 450px;
+  border: 3px solid black;
+
+  &--mini {
+    width: 130px;
+    height: 200px;
+
+    @include notebook {
+      width: 100px;
+      height: 150px;
+    }
+
+    @include tablet {
+      width: 70px;
+      height: 100px;
+    }
+
+    @include phone {
+      width: 50px;
+      height: 75px;
+    }
+
+  }
+}

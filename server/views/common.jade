@@ -1,0 +1,12 @@
+doctype html
+html(lang="ru")
+    head
+        title=title
+        meta(charset="UTF-8")
+        meta(name="viewport" content="width=device-width, initial-scale=1")
+        link(rel="stylesheet" href="/main.css")
+        if path_to_style
+            link(rel="stylesheet" href=path_to_style)
+
+    body
+        block content

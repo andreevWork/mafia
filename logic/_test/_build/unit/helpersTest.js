@@ -40,67 +40,30 @@
 /******/ 	return __webpack_require__(0);
 /******/ })
 /************************************************************************/
-/******/ ([
-/* 0 */
+/******/ ({
+
+/***/ 0:
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
-
-	var Roles_1 = __webpack_require__(4);
-	describe('Roles', function () {
-	    it('isMafia', function () {
-	        expect(Roles_1["default"].isMafia(Roles_1["default"].MAFIA)).toBeTruthy();
-	        expect(Roles_1["default"].isMafia(Roles_1["default"].DOCTOR)).toBeFalsy();
-	    });
-	    it('isDoctor', function () {
-	        expect(Roles_1["default"].isDoctor(Roles_1["default"].DOCTOR)).toBeTruthy();
-	        expect(Roles_1["default"].isDoctor(Roles_1["default"].MAFIA)).toBeFalsy();
-	    });
-	    it('isWhore', function () {
-	        expect(Roles_1["default"].isWhore(Roles_1["default"].WHORE)).toBeTruthy();
-	        expect(Roles_1["default"].isWhore(Roles_1["default"].DOCTOR)).toBeFalsy();
-	    });
-	    it('isInhabitant', function () {
-	        expect(Roles_1["default"].isInhabitant(Roles_1["default"].INHABITANT)).toBeTruthy();
-	        expect(Roles_1["default"].isInhabitant(Roles_1["default"].DOCTOR)).toBeFalsy();
-	    });
-	    it('isCommissar', function () {
-	        expect(Roles_1["default"].isCommissar(Roles_1["default"].COMMISSAR)).toBeTruthy();
-	        expect(Roles_1["default"].isCommissar(Roles_1["default"].DOCTOR)).toBeFalsy();
+	var helpers_1 = __webpack_require__(10);
+	describe('helpers', function () {
+	    describe('getMaxRepeatValue', function () {
+	        it('есть элемент повторяющийся больше всех раз', function () {
+	            var arr = ['1', '2', '3', '5', '2', '4', '3', '2', '0'];
+	            expect(helpers_1.getMaxRepeatValue(arr)).toEqual('2');
+	        });
+	        it('если нету выбрать рандомно из тех что повторяются больше всех', function () {
+	            var arr = ['1', '2', '3', '4', '5', '4', '9', '6', '7', '7', '2'], max_repeat_value = helpers_1.getMaxRepeatValue(arr), flag = max_repeat_value === '2' || max_repeat_value === '4' || max_repeat_value === '7';
+	            expect(flag).toBeTruthy();
+	        });
 	    });
 	});
+
 
 /***/ },
-/* 1 */,
-/* 2 */,
-/* 3 */,
-/* 4 */
-/***/ function(module, exports, __webpack_require__) {
 
-	"use strict";
-
-	var _ = __webpack_require__(5);
-	var Roles;
-	(function (Roles) {
-	    Roles[Roles["INHABITANT"] = 0] = "INHABITANT";
-	    Roles[Roles["MAFIA"] = 1] = "MAFIA";
-	    Roles[Roles["DOCTOR"] = 2] = "DOCTOR";
-	    Roles[Roles["COMMISSAR"] = 3] = "COMMISSAR";
-	    Roles[Roles["WHORE"] = 4] = "WHORE";
-	})(Roles || (Roles = {}));
-	exports.RolesKeys = _.keys(Roles).filter(function (key) {
-	    return _.isNaN(+key);
-	});
-	exports.RolesKeys.forEach(function (role) {
-	    Roles["is" + (role.charAt(0) + role.slice(1).toLowerCase())] = function (check_role) {
-	        return check_role === Roles[role];
-	    };
-	});
-	exports.__esModule = true;
-	exports["default"] = Roles;
-
-/***/ },
-/* 5 */
+/***/ 3:
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;//     Underscore.js 1.8.3
@@ -1653,5 +1616,33 @@
 	}.call(this));
 
 
+/***/ },
+
+/***/ 10:
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	var _ = __webpack_require__(3);
+	function getMaxRepeatValue(arr) {
+	    var obj = {
+	        max: {
+	            count: 0,
+	            value: ''
+	        }
+	    };
+	    _.shuffle(arr).forEach(function (val) {
+	        obj[val] = obj[val] || 0;
+	        obj[val]++;
+	        if (obj[val] > obj.max.count) {
+	            obj.max.count = obj[val];
+	            obj.max.value = val;
+	        }
+	    });
+	    return obj.max.value;
+	}
+	exports.getMaxRepeatValue = getMaxRepeatValue;
+
+
 /***/ }
-/******/ ]);
+
+/******/ });

@@ -40,43 +40,14 @@
 /******/ 	return __webpack_require__(0);
 /******/ })
 /************************************************************************/
-/******/ ({
-
-/***/ 0:
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-
-	var RoomStatus_1 = __webpack_require__(11);
-	describe('RoomStatus', function () {
-	    it('isWaitingPlayers', function () {
-	        expect(RoomStatus_1["default"].isWaitingPlayers(RoomStatus_1["default"].WAITING_PLAYERS)).toBeTruthy();
-	        expect(RoomStatus_1["default"].isWaitingPlayers(RoomStatus_1["default"].PLAYING)).toBeFalsy();
-	    });
-	});
-
-/***/ },
-
-/***/ 11:
+/******/ ([
+/* 0 */
 /***/ function(module, exports) {
 
 	"use strict";
+	var b = 324, c = 'dfsrgwr';
+	console.log(a);
 
-	var RoomStatus;
-	(function (RoomStatus) {
-	    RoomStatus[RoomStatus["WAITING_PLAYERS"] = 0] = "WAITING_PLAYERS";
-	    RoomStatus[RoomStatus["PLAYING"] = 1] = "PLAYING";
-	})(RoomStatus || (RoomStatus = {}));
-	var RoomStatus;
-	(function (RoomStatus) {
-	    function isWaitingPlayers(room_state) {
-	        return room_state === RoomStatus.WAITING_PLAYERS;
-	    }
-	    RoomStatus.isWaitingPlayers = isWaitingPlayers;
-	})(RoomStatus || (RoomStatus = {}));
-	exports.__esModule = true;
-	exports["default"] = RoomStatus;
 
 /***/ }
-
-/******/ });
+/******/ ]);
