@@ -54,7 +54,7 @@
 	var PlayersMocks_1 = __webpack_require__(25);
 	var _ = __webpack_require__(17);
 	var Roles_1 = __webpack_require__(20);
-	var store = redux_1.createStore(GameReducer_1["default"]), name_1 = 'Bob', token_1 = '23rfew4', name_2 = 'Bill', token_2 = 'r32fewa', name_3 = 'Rob', token_3 = 'asdf4332', name_4 = 'Ron', token_4 = 'asdf43wf4', name_5 = 'Maria', token_5 = 'sadfq4wt4', name_6 = 'Jessica', token_6 = 'asdf43f', players = [
+	var store = redux_1.createStore(GameReducer_1.default), name_1 = 'Bob', token_1 = '23rfew4', name_2 = 'Bill', token_2 = 'r32fewa', name_3 = 'Rob', token_3 = 'asdf4332', name_4 = 'Ron', token_4 = 'asdf43wf4', name_5 = 'Maria', token_5 = 'sadfq4wt4', name_6 = 'Jessica', token_6 = 'asdf43f', players = [
 	    PlayersMocks_1.getPlayer({ name: name_1, token: token_1 }),
 	    PlayersMocks_1.getPlayer({ name: name_2, token: token_2 }),
 	    PlayersMocks_1.getPlayer({ name: name_3, token: token_3 }),
@@ -75,14 +75,14 @@
 	            var count = _.countBy(store.getState().players, function (player) {
 	                return player.role;
 	            });
-	            expect(count[Roles_1["default"].INHABITANT]).toBe(3);
-	            expect(count[Roles_1["default"].DOCTOR]).toBe(1);
-	            expect(count[Roles_1["default"].WHORE]).toBe(1);
-	            expect(count[Roles_1["default"].MAFIA]).toBe(1);
+	            expect(count[Roles_1.default.INHABITANT]).toBe(3);
+	            expect(count[Roles_1.default.DOCTOR]).toBe(1);
+	            expect(count[Roles_1.default.WHORE]).toBe(1);
+	            expect(count[Roles_1.default.MAFIA]).toBe(1);
 	            unsubscribe();
 	            done();
 	        });
-	        store.dispatch(GameAction_1["default"].createGame(Player_1.Player.RolesForPlayers(players)));
+	        store.dispatch(GameAction_1.default.createGame(Player_1.Player.RolesForPlayers(players)));
 	    });
 	    it('1 ночь начинается', function (done) {
 	        var unsubscribe;
@@ -92,7 +92,7 @@
 	            unsubscribe();
 	            done();
 	        });
-	        store.dispatch(GameAction_1["default"].nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
+	        store.dispatch(GameAction_1.default.nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
 	    });
 	    it('1 ночь просыпается мафия', function (done) {
 	        var unsubscribe;
@@ -101,33 +101,33 @@
 	            unsubscribe();
 	            done();
 	        });
-	        store.dispatch(GameAction_1["default"].nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
+	        store.dispatch(GameAction_1.default.nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
 	    });
 	    it('1 ночь начинается голосование мафии', function (done) {
 	        var unsubscribe;
 	        unsubscribe = store.subscribe(function () {
 	            expect(store.getState().status).toBe(GameStatus_1.GameStatus.VOTE_MAFIA);
-	            expect(store.getState().active_roles).toEqual([Roles_1["default"].MAFIA]);
-	            expect(store.getState().vote_variants).toEqual(_.pluck(store.getState().players.filter(function (player) { return player.role !== Roles_1["default"].MAFIA; }), 'token'));
-	            expect(store.getState().votes).toEqual(_.pluck(store.getState().players.filter(function (player) { return player.role === Roles_1["default"].MAFIA; }), 'token').map(function (token) { return ({ who_token: token }); }));
+	            expect(store.getState().active_roles).toEqual([Roles_1.default.MAFIA]);
+	            expect(store.getState().vote_variants).toEqual(_.pluck(store.getState().players.filter(function (player) { return player.role !== Roles_1.default.MAFIA; }), 'token'));
+	            expect(store.getState().votes).toEqual(_.pluck(store.getState().players.filter(function (player) { return player.role === Roles_1.default.MAFIA; }), 'token').map(function (token) { return ({ who_token: token }); }));
 	            unsubscribe();
 	            done();
 	        });
-	        store.dispatch(GameAction_1["default"].nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
+	        store.dispatch(GameAction_1.default.nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
 	    });
 	    it('1 ночь приходит голос от мафии', function (done) {
 	        var unsubscribe;
-	        mafia = _.findWhere(store.getState().players, { role: Roles_1["default"].MAFIA }).token;
-	        mafia_target = _.findWhere(store.getState().players, { role: Roles_1["default"].INHABITANT }).token;
+	        mafia = _.findWhere(store.getState().players, { role: Roles_1.default.MAFIA }).token;
+	        mafia_target = _.findWhere(store.getState().players, { role: Roles_1.default.INHABITANT }).token;
 	        unsubscribe = store.subscribe(function () {
 	            expect(store.getState().status).toBe(GameStatus_1.GameStatus.VOTE_MAFIA);
-	            expect(store.getState().active_roles).toEqual([Roles_1["default"].MAFIA]);
-	            expect(store.getState().vote_variants).toEqual(_.pluck(store.getState().players.filter(function (player) { return player.role !== Roles_1["default"].MAFIA; }), 'token'));
+	            expect(store.getState().active_roles).toEqual([Roles_1.default.MAFIA]);
+	            expect(store.getState().vote_variants).toEqual(_.pluck(store.getState().players.filter(function (player) { return player.role !== Roles_1.default.MAFIA; }), 'token'));
 	            expect(store.getState().votes).toEqual([{ who_token: mafia, for_whom_token: mafia_target }]);
 	            unsubscribe();
 	            done();
 	        });
-	        store.dispatch(GameAction_1["default"].vote(mafia, mafia_target));
+	        store.dispatch(GameAction_1.default.vote(mafia, mafia_target));
 	    });
 	    it('1 ночь после всех голосов мафии, мафия засыпает', function (done) {
 	        var unsubscribe;
@@ -140,7 +140,7 @@
 	            unsubscribe();
 	            done();
 	        });
-	        store.dispatch(GameAction_1["default"].nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
+	        store.dispatch(GameAction_1.default.nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
 	    });
 	    it('1 ночь после мафии встает доктор', function (done) {
 	        var unsubscribe;
@@ -149,33 +149,33 @@
 	            unsubscribe();
 	            done();
 	        });
-	        store.dispatch(GameAction_1["default"].nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
+	        store.dispatch(GameAction_1.default.nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
 	    });
 	    it('1 ночь доктор начинает выбор', function (done) {
 	        var unsubscribe;
-	        doctor = _.findWhere(store.getState().players, { role: Roles_1["default"].DOCTOR }).token;
+	        doctor = _.findWhere(store.getState().players, { role: Roles_1.default.DOCTOR }).token;
 	        unsubscribe = store.subscribe(function () {
 	            expect(store.getState().status).toBe(GameStatus_1.GameStatus.VOTE_DOCTOR);
-	            expect(store.getState().active_roles).toEqual([Roles_1["default"].DOCTOR]);
+	            expect(store.getState().active_roles).toEqual([Roles_1.default.DOCTOR]);
 	            expect(store.getState().vote_variants).toEqual(_.pluck(store.getState().players, 'token'));
 	            expect(store.getState().votes).toEqual([{ who_token: doctor }]);
 	            unsubscribe();
 	            done();
 	        });
-	        store.dispatch(GameAction_1["default"].nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
+	        store.dispatch(GameAction_1.default.nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
 	    });
 	    it('1 ночь доктор проголосует и не сможет спасти убитого', function (done) {
 	        var unsubscribe;
-	        healing = _.first(_.without(_.pluck(_.where(store.getState().players, { role: Roles_1["default"].INHABITANT }), 'token'), mafia_target));
+	        healing = _.first(_.without(_.pluck(_.where(store.getState().players, { role: Roles_1.default.INHABITANT }), 'token'), mafia_target));
 	        unsubscribe = store.subscribe(function () {
 	            expect(store.getState().status).toBe(GameStatus_1.GameStatus.VOTE_DOCTOR);
-	            expect(store.getState().active_roles).toEqual([Roles_1["default"].DOCTOR]);
+	            expect(store.getState().active_roles).toEqual([Roles_1.default.DOCTOR]);
 	            expect(store.getState().vote_variants).toEqual(_.pluck(store.getState().players, 'token'));
 	            expect(store.getState().votes).toEqual([{ who_token: doctor, for_whom_token: healing }]);
 	            unsubscribe();
 	            done();
 	        });
-	        store.dispatch(GameAction_1["default"].vote(doctor, healing));
+	        store.dispatch(GameAction_1.default.vote(doctor, healing));
 	    });
 	    it('1 ночь после выбора доктор засыпает', function (done) {
 	        var unsubscribe;
@@ -190,7 +190,7 @@
 	            unsubscribe();
 	            done();
 	        });
-	        store.dispatch(GameAction_1["default"].nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
+	        store.dispatch(GameAction_1.default.nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
 	    });
 	    it('1 ночь после доктора встает путана', function (done) {
 	        var unsubscribe;
@@ -199,33 +199,33 @@
 	            unsubscribe();
 	            done();
 	        });
-	        store.dispatch(GameAction_1["default"].nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
+	        store.dispatch(GameAction_1.default.nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
 	    });
 	    it('1 ночь путана начинает голосование', function (done) {
 	        var unsubscribe;
-	        whore = _.findWhere(store.getState().players, { role: Roles_1["default"].WHORE }).token;
+	        whore = _.findWhere(store.getState().players, { role: Roles_1.default.WHORE }).token;
 	        unsubscribe = store.subscribe(function () {
 	            expect(store.getState().status).toBe(GameStatus_1.GameStatus.VOTE_WHORE);
-	            expect(store.getState().active_roles).toEqual([Roles_1["default"].WHORE]);
+	            expect(store.getState().active_roles).toEqual([Roles_1.default.WHORE]);
 	            expect(store.getState().vote_variants).toEqual(_.pluck(store.getState().players.filter(function (player) { return player.token !== whore; }), 'token'));
 	            expect(store.getState().votes).toEqual([{ who_token: whore }]);
 	            unsubscribe();
 	            done();
 	        });
-	        store.dispatch(GameAction_1["default"].nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
+	        store.dispatch(GameAction_1.default.nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
 	    });
 	    it('1 ночь путана проголосует и не сможет спасти убитого', function (done) {
 	        var unsubscribe;
-	        real_man = _.last(_.without(_.pluck(_.where(store.getState().players, { role: Roles_1["default"].INHABITANT }), 'token'), mafia_target));
+	        real_man = _.last(_.without(_.pluck(_.where(store.getState().players, { role: Roles_1.default.INHABITANT }), 'token'), mafia_target));
 	        unsubscribe = store.subscribe(function () {
 	            expect(store.getState().status).toBe(GameStatus_1.GameStatus.VOTE_WHORE);
-	            expect(store.getState().active_roles).toEqual([Roles_1["default"].WHORE]);
+	            expect(store.getState().active_roles).toEqual([Roles_1.default.WHORE]);
 	            expect(store.getState().vote_variants).toEqual(_.pluck(store.getState().players.filter(function (player) { return player.token !== whore; }), 'token'));
 	            expect(store.getState().votes).toEqual([{ who_token: whore, for_whom_token: real_man }]);
 	            unsubscribe();
 	            done();
 	        });
-	        store.dispatch(GameAction_1["default"].vote(whore, real_man));
+	        store.dispatch(GameAction_1.default.vote(whore, real_man));
 	    });
 	    it('1 ночь после выбора путана засыпает', function (done) {
 	        var unsubscribe;
@@ -239,7 +239,7 @@
 	            unsubscribe();
 	            done();
 	        });
-	        store.dispatch(GameAction_1["default"].nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
+	        store.dispatch(GameAction_1.default.nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
 	    });
 	    it('1 ночь коммиссара нет, следовательно после путаны город просыпается, и находят убитого', function (done) {
 	        var unsubscribe;
@@ -252,7 +252,7 @@
 	            unsubscribe();
 	            done();
 	        });
-	        store.dispatch(GameAction_1["default"].nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
+	        store.dispatch(GameAction_1.default.nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
 	    });
 	    it('1 день после выяснения кого убили, наступет первая половина дня в которую идет обсуждение за мафию, причем убитый игрок уже будет удален из игроков в партии', function (done) {
 	        var unsubscribe;
@@ -263,7 +263,7 @@
 	            unsubscribe();
 	            done();
 	        });
-	        store.dispatch(GameAction_1["default"].nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
+	        store.dispatch(GameAction_1.default.nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
 	    });
 	    it('1 день начианется голосование за мафию', function (done) {
 	        var unsubscribe;
@@ -275,12 +275,12 @@
 	            unsubscribe();
 	            done();
 	        });
-	        store.dispatch(GameAction_1["default"].nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
+	        store.dispatch(GameAction_1.default.nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
 	    });
 	    it('1 день люди голосуют за мафию и выгонят мирного жителя например того, кого хилил доктор ночью', function () {
 	        var execution = healing;
 	        store.getState().players.forEach(function (player) {
-	            store.dispatch(GameAction_1["default"].vote(player.token, execution));
+	            store.dispatch(GameAction_1.default.vote(player.token, execution));
 	        });
 	        expect(store.getState().status).toBe(GameStatus_1.GameStatus.VOTE_INHABITANT);
 	        expect(store.getState().votes).toEqual(store.getState().players.map(function (p) { return ({ who_token: p.token, for_whom_token: execution }); }));
@@ -298,7 +298,7 @@
 	            unsubscribe();
 	            done();
 	        });
-	        store.dispatch(GameAction_1["default"].nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
+	        store.dispatch(GameAction_1.default.nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
 	    });
 	    it('2 ночь начинается, казненный игрок удаляется из массива', function (done) {
 	        var unsubscribe;
@@ -313,7 +313,7 @@
 	            unsubscribe();
 	            done();
 	        });
-	        store.dispatch(GameAction_1["default"].nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
+	        store.dispatch(GameAction_1.default.nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
 	    });
 	    it('2 ночь просыпается мафия', function (done) {
 	        var unsubscribe;
@@ -322,32 +322,32 @@
 	            unsubscribe();
 	            done();
 	        });
-	        store.dispatch(GameAction_1["default"].nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
+	        store.dispatch(GameAction_1.default.nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
 	    });
 	    it('2 ночь начинается голосование мафии', function (done) {
 	        var unsubscribe;
 	        unsubscribe = store.subscribe(function () {
 	            expect(store.getState().status).toBe(GameStatus_1.GameStatus.VOTE_MAFIA);
-	            expect(store.getState().active_roles).toEqual([Roles_1["default"].MAFIA]);
-	            expect(store.getState().vote_variants).toEqual(_.pluck(store.getState().players.filter(function (player) { return player.role !== Roles_1["default"].MAFIA; }), 'token'));
-	            expect(store.getState().votes).toEqual(_.pluck(store.getState().players.filter(function (player) { return player.role === Roles_1["default"].MAFIA; }), 'token').map(function (token) { return ({ who_token: token }); }));
+	            expect(store.getState().active_roles).toEqual([Roles_1.default.MAFIA]);
+	            expect(store.getState().vote_variants).toEqual(_.pluck(store.getState().players.filter(function (player) { return player.role !== Roles_1.default.MAFIA; }), 'token'));
+	            expect(store.getState().votes).toEqual(_.pluck(store.getState().players.filter(function (player) { return player.role === Roles_1.default.MAFIA; }), 'token').map(function (token) { return ({ who_token: token }); }));
 	            unsubscribe();
 	            done();
 	        });
-	        store.dispatch(GameAction_1["default"].nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
+	        store.dispatch(GameAction_1.default.nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
 	    });
 	    it('2 ночь приходит голос от мафии', function (done) {
 	        var unsubscribe;
-	        mafia_target = _.findWhere(store.getState().players, { role: Roles_1["default"].INHABITANT }).token;
+	        mafia_target = _.findWhere(store.getState().players, { role: Roles_1.default.INHABITANT }).token;
 	        unsubscribe = store.subscribe(function () {
 	            expect(store.getState().status).toBe(GameStatus_1.GameStatus.VOTE_MAFIA);
-	            expect(store.getState().active_roles).toEqual([Roles_1["default"].MAFIA]);
-	            expect(store.getState().vote_variants).toEqual(_.pluck(store.getState().players.filter(function (player) { return player.role !== Roles_1["default"].MAFIA; }), 'token'));
+	            expect(store.getState().active_roles).toEqual([Roles_1.default.MAFIA]);
+	            expect(store.getState().vote_variants).toEqual(_.pluck(store.getState().players.filter(function (player) { return player.role !== Roles_1.default.MAFIA; }), 'token'));
 	            expect(store.getState().votes).toEqual([{ who_token: mafia, for_whom_token: mafia_target }]);
 	            unsubscribe();
 	            done();
 	        });
-	        store.dispatch(GameAction_1["default"].vote(mafia, mafia_target));
+	        store.dispatch(GameAction_1.default.vote(mafia, mafia_target));
 	    });
 	    it('2 ночь после всех голосов мафии, мафия засыпает', function (done) {
 	        var unsubscribe;
@@ -360,7 +360,7 @@
 	            unsubscribe();
 	            done();
 	        });
-	        store.dispatch(GameAction_1["default"].nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
+	        store.dispatch(GameAction_1.default.nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
 	    });
 	    it('2 ночь после мафии встает доктор', function (done) {
 	        var unsubscribe;
@@ -369,32 +369,32 @@
 	            unsubscribe();
 	            done();
 	        });
-	        store.dispatch(GameAction_1["default"].nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
+	        store.dispatch(GameAction_1.default.nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
 	    });
 	    it('2 ночь доктор начинает выбор, причем тот за кого он голосовал в том раунде в выборе отстутствует', function (done) {
 	        var unsubscribe;
 	        unsubscribe = store.subscribe(function () {
 	            expect(store.getState().status).toBe(GameStatus_1.GameStatus.VOTE_DOCTOR);
-	            expect(store.getState().active_roles).toEqual([Roles_1["default"].DOCTOR]);
+	            expect(store.getState().active_roles).toEqual([Roles_1.default.DOCTOR]);
 	            expect(store.getState().vote_variants).toEqual(_.without(_.pluck(store.getState().players, 'token'), store.getState().prev_round_healing));
 	            expect(store.getState().votes).toEqual([{ who_token: doctor }]);
 	            unsubscribe();
 	            done();
 	        });
-	        store.dispatch(GameAction_1["default"].nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
+	        store.dispatch(GameAction_1.default.nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
 	    });
 	    it('2 ночь доктор проголосует и спасает убитого', function (done) {
 	        var unsubscribe;
 	        healing = mafia_target;
 	        unsubscribe = store.subscribe(function () {
 	            expect(store.getState().status).toBe(GameStatus_1.GameStatus.VOTE_DOCTOR);
-	            expect(store.getState().active_roles).toEqual([Roles_1["default"].DOCTOR]);
+	            expect(store.getState().active_roles).toEqual([Roles_1.default.DOCTOR]);
 	            expect(store.getState().vote_variants).toEqual(_.without(_.pluck(store.getState().players, 'token'), store.getState().prev_round_healing));
 	            expect(store.getState().votes).toEqual([{ who_token: doctor, for_whom_token: healing }]);
 	            unsubscribe();
 	            done();
 	        });
-	        store.dispatch(GameAction_1["default"].vote(doctor, healing));
+	        store.dispatch(GameAction_1.default.vote(doctor, healing));
 	    });
 	    it('2 ночь после выбора доктор засыпает', function (done) {
 	        var unsubscribe;
@@ -409,7 +409,7 @@
 	            unsubscribe();
 	            done();
 	        });
-	        store.dispatch(GameAction_1["default"].nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
+	        store.dispatch(GameAction_1.default.nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
 	    });
 	    it('2 ночь после доктора встает путана', function (done) {
 	        var unsubscribe;
@@ -418,33 +418,33 @@
 	            unsubscribe();
 	            done();
 	        });
-	        store.dispatch(GameAction_1["default"].nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
+	        store.dispatch(GameAction_1.default.nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
 	    });
 	    it('2 ночь путана начинает голосование', function (done) {
 	        var unsubscribe;
-	        whore = _.findWhere(store.getState().players, { role: Roles_1["default"].WHORE }).token;
+	        whore = _.findWhere(store.getState().players, { role: Roles_1.default.WHORE }).token;
 	        unsubscribe = store.subscribe(function () {
 	            expect(store.getState().status).toBe(GameStatus_1.GameStatus.VOTE_WHORE);
-	            expect(store.getState().active_roles).toEqual([Roles_1["default"].WHORE]);
+	            expect(store.getState().active_roles).toEqual([Roles_1.default.WHORE]);
 	            expect(store.getState().vote_variants).toEqual(_.pluck(store.getState().players.filter(function (player) { return player.token !== whore; }), 'token'));
 	            expect(store.getState().votes).toEqual([{ who_token: whore }]);
 	            unsubscribe();
 	            done();
 	        });
-	        store.dispatch(GameAction_1["default"].nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
+	        store.dispatch(GameAction_1.default.nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
 	    });
 	    it('2 ночь путана проголосует и это уже не имеет значения', function (done) {
 	        var unsubscribe;
-	        real_man = _.last(_.without(_.pluck(_.where(store.getState().players, { role: Roles_1["default"].INHABITANT }), 'token'), mafia_target));
+	        real_man = _.last(_.without(_.pluck(_.where(store.getState().players, { role: Roles_1.default.INHABITANT }), 'token'), mafia_target));
 	        unsubscribe = store.subscribe(function () {
 	            expect(store.getState().status).toBe(GameStatus_1.GameStatus.VOTE_WHORE);
-	            expect(store.getState().active_roles).toEqual([Roles_1["default"].WHORE]);
+	            expect(store.getState().active_roles).toEqual([Roles_1.default.WHORE]);
 	            expect(store.getState().vote_variants).toEqual(_.pluck(store.getState().players.filter(function (player) { return player.token !== whore; }), 'token'));
 	            expect(store.getState().votes).toEqual([{ who_token: whore, for_whom_token: real_man }]);
 	            unsubscribe();
 	            done();
 	        });
-	        store.dispatch(GameAction_1["default"].vote(whore, real_man));
+	        store.dispatch(GameAction_1.default.vote(whore, real_man));
 	    });
 	    it('2 ночь после выбора путана засыпает', function (done) {
 	        var unsubscribe;
@@ -459,7 +459,7 @@
 	            unsubscribe();
 	            done();
 	        });
-	        store.dispatch(GameAction_1["default"].nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
+	        store.dispatch(GameAction_1.default.nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
 	    });
 	    it('2 ночь коммиссара нет, следовательно после путаны город просыпается, и никого не найдут', function (done) {
 	        var unsubscribe;
@@ -472,7 +472,7 @@
 	            unsubscribe();
 	            done();
 	        });
-	        store.dispatch(GameAction_1["default"].nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
+	        store.dispatch(GameAction_1.default.nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
 	    });
 	    it('2 день никого не убили, никто не удаляется', function (done) {
 	        var unsubscribe;
@@ -482,7 +482,7 @@
 	            unsubscribe();
 	            done();
 	        });
-	        store.dispatch(GameAction_1["default"].nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
+	        store.dispatch(GameAction_1.default.nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
 	    });
 	    it('2 день начианется голосование за мафию', function (done) {
 	        var unsubscribe;
@@ -494,12 +494,12 @@
 	            unsubscribe();
 	            done();
 	        });
-	        store.dispatch(GameAction_1["default"].nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
+	        store.dispatch(GameAction_1.default.nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
 	    });
 	    it('2 день люди голосуют за мафию и выгонят доктора', function () {
 	        store.getState().players.forEach(function (player, i) {
 	            var for_whom_token = i % 3 === 0 && i !== 0 ? healing : doctor;
-	            store.dispatch(GameAction_1["default"].vote(player.token, for_whom_token));
+	            store.dispatch(GameAction_1.default.vote(player.token, for_whom_token));
 	        });
 	        expect(store.getState().status).toBe(GameStatus_1.GameStatus.VOTE_INHABITANT);
 	        expect(store.getState().votes).toEqual(store.getState().players.map(function (p, i) {
@@ -519,7 +519,7 @@
 	            unsubscribe();
 	            done();
 	        });
-	        store.dispatch(GameAction_1["default"].nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
+	        store.dispatch(GameAction_1.default.nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
 	    });
 	    it('3 ночь начинается, казненный игрок удаляется из массива', function (done) {
 	        var unsubscribe;
@@ -534,7 +534,7 @@
 	            unsubscribe();
 	            done();
 	        });
-	        store.dispatch(GameAction_1["default"].nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
+	        store.dispatch(GameAction_1.default.nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
 	    });
 	    it('3 ночь просыпается мафия', function (done) {
 	        var unsubscribe;
@@ -543,32 +543,32 @@
 	            unsubscribe();
 	            done();
 	        });
-	        store.dispatch(GameAction_1["default"].nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
+	        store.dispatch(GameAction_1.default.nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
 	    });
 	    it('3 ночь начинается голосование мафии', function (done) {
 	        var unsubscribe;
 	        unsubscribe = store.subscribe(function () {
 	            expect(store.getState().status).toBe(GameStatus_1.GameStatus.VOTE_MAFIA);
-	            expect(store.getState().active_roles).toEqual([Roles_1["default"].MAFIA]);
-	            expect(store.getState().vote_variants).toEqual(_.pluck(store.getState().players.filter(function (player) { return player.role !== Roles_1["default"].MAFIA; }), 'token'));
-	            expect(store.getState().votes).toEqual(_.pluck(store.getState().players.filter(function (player) { return player.role === Roles_1["default"].MAFIA; }), 'token').map(function (token) { return ({ who_token: token }); }));
+	            expect(store.getState().active_roles).toEqual([Roles_1.default.MAFIA]);
+	            expect(store.getState().vote_variants).toEqual(_.pluck(store.getState().players.filter(function (player) { return player.role !== Roles_1.default.MAFIA; }), 'token'));
+	            expect(store.getState().votes).toEqual(_.pluck(store.getState().players.filter(function (player) { return player.role === Roles_1.default.MAFIA; }), 'token').map(function (token) { return ({ who_token: token }); }));
 	            unsubscribe();
 	            done();
 	        });
-	        store.dispatch(GameAction_1["default"].nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
+	        store.dispatch(GameAction_1.default.nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
 	    });
 	    it('3 ночь приходит голос от мафии', function (done) {
 	        var unsubscribe;
-	        mafia_target = _.findWhere(store.getState().players, { role: Roles_1["default"].INHABITANT }).token;
+	        mafia_target = _.findWhere(store.getState().players, { role: Roles_1.default.INHABITANT }).token;
 	        unsubscribe = store.subscribe(function () {
 	            expect(store.getState().status).toBe(GameStatus_1.GameStatus.VOTE_MAFIA);
-	            expect(store.getState().active_roles).toEqual([Roles_1["default"].MAFIA]);
-	            expect(store.getState().vote_variants).toEqual(_.pluck(store.getState().players.filter(function (player) { return player.role !== Roles_1["default"].MAFIA; }), 'token'));
+	            expect(store.getState().active_roles).toEqual([Roles_1.default.MAFIA]);
+	            expect(store.getState().vote_variants).toEqual(_.pluck(store.getState().players.filter(function (player) { return player.role !== Roles_1.default.MAFIA; }), 'token'));
 	            expect(store.getState().votes).toEqual([{ who_token: mafia, for_whom_token: mafia_target }]);
 	            unsubscribe();
 	            done();
 	        });
-	        store.dispatch(GameAction_1["default"].vote(mafia, mafia_target));
+	        store.dispatch(GameAction_1.default.vote(mafia, mafia_target));
 	    });
 	    it('3 ночь после всех голосов мафии, мафия засыпает', function (done) {
 	        var unsubscribe;
@@ -581,7 +581,7 @@
 	            unsubscribe();
 	            done();
 	        });
-	        store.dispatch(GameAction_1["default"].nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
+	        store.dispatch(GameAction_1.default.nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
 	    });
 	    it('3 ночь после мафии встает путана, доктор убит', function (done) {
 	        var unsubscribe;
@@ -590,32 +590,32 @@
 	            unsubscribe();
 	            done();
 	        });
-	        store.dispatch(GameAction_1["default"].nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
+	        store.dispatch(GameAction_1.default.nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
 	    });
 	    it('3 ночь путана начинает голосование', function (done) {
 	        var unsubscribe;
-	        whore = _.findWhere(store.getState().players, { role: Roles_1["default"].WHORE }).token;
+	        whore = _.findWhere(store.getState().players, { role: Roles_1.default.WHORE }).token;
 	        unsubscribe = store.subscribe(function () {
 	            expect(store.getState().status).toBe(GameStatus_1.GameStatus.VOTE_WHORE);
-	            expect(store.getState().active_roles).toEqual([Roles_1["default"].WHORE]);
+	            expect(store.getState().active_roles).toEqual([Roles_1.default.WHORE]);
 	            expect(store.getState().vote_variants).toEqual(_.pluck(store.getState().players.filter(function (player) { return player.token !== whore; }), 'token'));
 	            expect(store.getState().votes).toEqual([{ who_token: whore }]);
 	            unsubscribe();
 	            done();
 	        });
-	        store.dispatch(GameAction_1["default"].nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
+	        store.dispatch(GameAction_1.default.nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
 	    });
 	    it('3 ночь путана проголосует и спасает жителя', function (done) {
 	        var unsubscribe;
 	        unsubscribe = store.subscribe(function () {
 	            expect(store.getState().status).toBe(GameStatus_1.GameStatus.VOTE_WHORE);
-	            expect(store.getState().active_roles).toEqual([Roles_1["default"].WHORE]);
+	            expect(store.getState().active_roles).toEqual([Roles_1.default.WHORE]);
 	            expect(store.getState().vote_variants).toEqual(_.pluck(store.getState().players.filter(function (player) { return player.token !== whore; }), 'token'));
 	            expect(store.getState().votes).toEqual([{ who_token: whore, for_whom_token: mafia_target }]);
 	            unsubscribe();
 	            done();
 	        });
-	        store.dispatch(GameAction_1["default"].vote(whore, mafia_target));
+	        store.dispatch(GameAction_1.default.vote(whore, mafia_target));
 	    });
 	    it('3 ночь после выбора путана засыпает', function (done) {
 	        var unsubscribe;
@@ -629,7 +629,7 @@
 	            unsubscribe();
 	            done();
 	        });
-	        store.dispatch(GameAction_1["default"].nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
+	        store.dispatch(GameAction_1.default.nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
 	    });
 	    it('3 ночь коммиссара нет, следовательно после путаны город просыпается, и никого не найдут', function (done) {
 	        var unsubscribe;
@@ -642,7 +642,7 @@
 	            unsubscribe();
 	            done();
 	        });
-	        store.dispatch(GameAction_1["default"].nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
+	        store.dispatch(GameAction_1.default.nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
 	    });
 	    it('3 день никого не убили, никто не удаляется', function (done) {
 	        var unsubscribe;
@@ -652,7 +652,7 @@
 	            unsubscribe();
 	            done();
 	        });
-	        store.dispatch(GameAction_1["default"].nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
+	        store.dispatch(GameAction_1.default.nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
 	    });
 	    it('3 день начианется голосование за мафию', function (done) {
 	        var unsubscribe;
@@ -664,12 +664,12 @@
 	            unsubscribe();
 	            done();
 	        });
-	        store.dispatch(GameAction_1["default"].nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
+	        store.dispatch(GameAction_1.default.nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
 	    });
 	    it('3 день люди голосуют за мафию и выгонят путану', function () {
 	        store.getState().players.forEach(function (player, i) {
 	            var for_whom_token = i % 3 === 0 && i !== 0 ? healing : whore;
-	            store.dispatch(GameAction_1["default"].vote(player.token, for_whom_token));
+	            store.dispatch(GameAction_1.default.vote(player.token, for_whom_token));
 	        });
 	        expect(store.getState().status).toBe(GameStatus_1.GameStatus.VOTE_INHABITANT);
 	        expect(store.getState().votes).toEqual(store.getState().players.map(function (p, i) {
@@ -682,14 +682,14 @@
 	        unsubscribe = store.subscribe(function () {
 	            expect(store.getState().status).toBe(GameStatus_1.GameStatus.DAY_BEFORE_NIGHT);
 	            expect(store.getState().active_roles).toBeNull();
-	            expect(store.getState().win_role).toBe(Roles_1["default"].MAFIA);
+	            expect(store.getState().win_role).toBe(Roles_1.default.MAFIA);
 	            expect(store.getState().vote_variants.length).toEqual(0);
 	            expect(store.getState().votes.length).toEqual(0);
 	            expect(store.getState().round_data.execution).toEqual(whore);
 	            unsubscribe();
 	            done();
 	        });
-	        store.dispatch(GameAction_1["default"].nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
+	        store.dispatch(GameAction_1.default.nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(store.getState())));
 	    });
 	});
 
@@ -1644,14 +1644,14 @@
 	function GameReducer(state, action) {
 	    if (state === void 0) { state = States_1.InitialGameState; }
 	    switch (action.type) {
-	        case GameAction_1["default"].CREATE_GAME:
+	        case GameAction_1.default.CREATE_GAME:
 	            return States_1.getNewState(States_1.InitialGameState, ['time_create', 'time_last_update', 'time_last_update_players'], {
 	                status: GameStatus_1.GameStatus.START_THE_GAME,
 	                players: action.payload.players
 	            });
-	        case GameAction_1["default"].NEXT_GAME_STEP:
-	            return GameStatusReducer_1["default"](state, action);
-	        case GameAction_1["default"].VOTE:
+	        case GameAction_1.default.NEXT_GAME_STEP:
+	            return GameStatusReducer_1.default(state, action);
+	        case GameAction_1.default.VOTE:
 	            if (state.votes.length && !~_.pluck(state.votes, 'who_token').indexOf(action.payload.who_token)) {
 	                return state;
 	            }
@@ -1664,8 +1664,8 @@
 	            return state;
 	    }
 	}
-	exports.__esModule = true;
-	exports["default"] = GameReducer;
+	Object.defineProperty(exports, "__esModule", { value: true });
+	exports.default = GameReducer;
 
 
 /***/ },
@@ -3291,8 +3291,8 @@
 	    }
 	    GameAction.vote = vote;
 	})(GameAction || (GameAction = {}));
-	exports.__esModule = true;
-	exports["default"] = GameAction;
+	Object.defineProperty(exports, "__esModule", { value: true });
+	exports.default = GameAction;
 
 
 /***/ },
@@ -3328,15 +3328,15 @@
 	    function getActiveRole(game_status) {
 	        switch (game_status) {
 	            case GameStatus.VOTE_MAFIA:
-	                return [Roles_1["default"].MAFIA];
+	                return [Roles_1.default.MAFIA];
 	            case GameStatus.VOTE_DOCTOR:
-	                return [Roles_1["default"].DOCTOR];
+	                return [Roles_1.default.DOCTOR];
 	            case GameStatus.VOTE_WHORE:
-	                return [Roles_1["default"].WHORE];
+	                return [Roles_1.default.WHORE];
 	            case GameStatus.VOTE_COMMISSAR:
-	                return [Roles_1["default"].COMMISSAR];
+	                return [Roles_1.default.COMMISSAR];
 	            case GameStatus.VOTE_INHABITANT:
-	                return [Roles_1["default"].MAFIA, Roles_1["default"].DOCTOR, Roles_1["default"].INHABITANT, Roles_1["default"].WHORE, Roles_1["default"].COMMISSAR];
+	                return [Roles_1.default.MAFIA, Roles_1.default.DOCTOR, Roles_1.default.INHABITANT, Roles_1.default.WHORE, Roles_1.default.COMMISSAR];
 	            default:
 	                return null;
 	        }
@@ -3374,26 +3374,26 @@
 	            case GameStatus.FALL_ASLEEP_COMMISSAR:
 	                return GameStatus.WAKE_UP_INHABITANT;
 	            case GameStatus.FALL_ASLEEP_MAFIA:
-	                if (_.findWhere(state.players, { role: Roles_1["default"].DOCTOR })) {
+	                if (_.findWhere(state.players, { role: Roles_1.default.DOCTOR })) {
 	                    return GameStatus.WAKE_UP_DOCTOR;
 	                }
-	                if (_.findWhere(state.players, { role: Roles_1["default"].WHORE })) {
+	                if (_.findWhere(state.players, { role: Roles_1.default.WHORE })) {
 	                    return GameStatus.WAKE_UP_WHORE;
 	                }
-	                if (_.findWhere(state.players, { role: Roles_1["default"].COMMISSAR })) {
+	                if (_.findWhere(state.players, { role: Roles_1.default.COMMISSAR })) {
 	                    return GameStatus.WAKE_UP_COMMISSAR;
 	                }
 	                return GameStatus.WAKE_UP_INHABITANT;
 	            case GameStatus.FALL_ASLEEP_DOCTOR:
-	                if (_.findWhere(state.players, { role: Roles_1["default"].WHORE })) {
+	                if (_.findWhere(state.players, { role: Roles_1.default.WHORE })) {
 	                    return GameStatus.WAKE_UP_WHORE;
 	                }
-	                if (_.findWhere(state.players, { role: Roles_1["default"].COMMISSAR })) {
+	                if (_.findWhere(state.players, { role: Roles_1.default.COMMISSAR })) {
 	                    return GameStatus.WAKE_UP_COMMISSAR;
 	                }
 	                return GameStatus.WAKE_UP_INHABITANT;
 	            case GameStatus.FALL_ASLEEP_WHORE:
-	                if (_.findWhere(state.players, { role: Roles_1["default"].COMMISSAR })) {
+	                if (_.findWhere(state.players, { role: Roles_1.default.COMMISSAR })) {
 	                    return GameStatus.WAKE_UP_COMMISSAR;
 	                }
 	                return GameStatus.WAKE_UP_INHABITANT;
@@ -3416,8 +3416,34 @@
 	    Roles[Roles["COMMISSAR"] = 3] = "COMMISSAR";
 	    Roles[Roles["WHORE"] = 4] = "WHORE";
 	})(Roles || (Roles = {}));
-	exports.__esModule = true;
-	exports["default"] = Roles;
+	exports.RolesMapping = {};
+	exports.RolesMapping[Roles.INHABITANT] = {
+	    title: 'Мирные жители',
+	    description: 'Играют только “днем”, могут в это время суток, с помощью голосования, казнить одного из игроков. До конца игры не знают, кто из игроков за кого играет.',
+	    card_img: 'inhabitant.png'
+	};
+	exports.RolesMapping[Roles.MAFIA] = {
+	    title: 'Мафия',
+	    description: 'Днем прикидываются мирными жителями, ночью просыпаются и убивают мирных жителей. Все Мафиози знают друг друга.',
+	    card_img: 'mafia.png'
+	};
+	exports.RolesMapping[Roles.DOCTOR] = {
+	    title: 'Доктор',
+	    description: 'Играет за жителей. Игрок, получивший эту роль, может спасти ночью от смерти одного из игроков.',
+	    card_img: 'doctor.png'
+	};
+	exports.RolesMapping[Roles.COMMISSAR] = {
+	    title: 'Комиссар',
+	    description: 'Играет за жителей. Просыпаясь ночью и выбрав одного игрока, он получает ответ на вопрос, является ли указанный человек мафиози.',
+	    card_img: 'commissar.png'
+	};
+	exports.RolesMapping[Roles.WHORE] = {
+	    title: 'Путана',
+	    description: 'Играет за жителей. Ночью путана выбирает одного из игроков, которого она спасает от смерти. Отличие только в том, что если убивают доктора, то пациент остается жив. Если же представительница древнейшей профессии сама становится ночной жертвой мафии, то вместе с ней погибает и ее клиент.',
+	    card_img: 'whore.png'
+	};
+	Object.defineProperty(exports, "__esModule", { value: true });
+	exports.default = Roles;
 
 
 /***/ },
@@ -3443,10 +3469,10 @@
 	                execution = helpers_1.getMaxRepeatValue(_.pluck(state.votes, 'for_whom_token'));
 	            }
 	            if (Player_1.Player.isEqualMafiaAndOthers(state.players, execution)) {
-	                win_role = Roles_1["default"].MAFIA;
+	                win_role = Roles_1.default.MAFIA;
 	            }
 	            if (!Player_1.Player.hasMafia(state.players, execution)) {
-	                win_role = Roles_1["default"].INHABITANT;
+	                win_role = Roles_1.default.INHABITANT;
 	            }
 	            return States_1.getNewState(state, ['time_last_update', 'time_last_update_players'], {
 	                status: action.payload.status,
@@ -3461,7 +3487,7 @@
 	                players = players.filter(function (player) { return !~round_data.killed.indexOf(player.token); });
 	            }
 	            if (Player_1.Player.isEqualMafiaAndOthers(players)) {
-	                win_role = Roles_1["default"].MAFIA;
+	                win_role = Roles_1.default.MAFIA;
 	            }
 	            return States_1.getNewState(state, ['time_last_update'], {
 	                status: action.payload.status,
@@ -3482,7 +3508,7 @@
 	            round_data = _.clone(state.round_data);
 	            round_data.killed = [];
 	            round_data.killed = round_data.killed.concat(round_data.mafia_target);
-	            var whore = _.findWhere(state.players, { role: Roles_1["default"].WHORE });
+	            var whore = _.findWhere(state.players, { role: Roles_1.default.WHORE });
 	            if (whore && whore.token === round_data.mafia_target) {
 	                round_data.killed = round_data.killed.concat(round_data.real_man);
 	            }
@@ -3561,8 +3587,8 @@
 	            return state;
 	    }
 	}
-	exports.__esModule = true;
-	exports["default"] = GameStatusReducer;
+	Object.defineProperty(exports, "__esModule", { value: true });
+	exports.default = GameStatusReducer;
 
 
 /***/ },
@@ -3583,14 +3609,14 @@
 	        ]
 	    };
 	    function RolesForPlayers(players) {
-	        var steps = Math.floor((players.length - GameEnvironment_1.MIN_PLAYERS) / GameEnvironment_1.STEP_CHANGE_ROLES) + 1, game_players = _.shuffle(players).map(function (player) { return _.extend({ role: Roles_1["default"].INHABITANT }, player); }), flag_commissar = false, index = 0;
-	        game_players[index++].role = Roles_1["default"].DOCTOR;
-	        game_players[index++].role = Roles_1["default"].WHORE;
+	        var steps = Math.floor((players.length - GameEnvironment_1.MIN_PLAYERS) / GameEnvironment_1.STEP_CHANGE_ROLES) + 1, game_players = _.shuffle(players).map(function (player) { return _.extend({ role: Roles_1.default.INHABITANT }, player); }), flag_commissar = false, index = 0;
+	        game_players[index++].role = Roles_1.default.DOCTOR;
+	        game_players[index++].role = Roles_1.default.WHORE;
 	        while (steps--) {
-	            game_players[index++].role = Roles_1["default"].MAFIA;
+	            game_players[index++].role = Roles_1.default.MAFIA;
 	            if (steps % 2 !== 0) {
 	                if (!flag_commissar) {
-	                    game_players[index++].role = Roles_1["default"].COMMISSAR;
+	                    game_players[index++].role = Roles_1.default.COMMISSAR;
 	                    flag_commissar = true;
 	                }
 	            }
@@ -3604,7 +3630,7 @@
 	        players.forEach(function (player) {
 	            if (remove_in_future_token === player.token)
 	                return;
-	            if (player.role === Roles_1["default"].MAFIA) {
+	            if (player.role === Roles_1.default.MAFIA) {
 	                mafia_count++;
 	            }
 	            else {
@@ -3620,7 +3646,7 @@
 	        players.forEach(function (player) {
 	            if (remove_in_future_token === player.token)
 	                return;
-	            if (player.role === Roles_1["default"].MAFIA) {
+	            if (player.role === Roles_1.default.MAFIA) {
 	                mafia_count++;
 	            }
 	        });
@@ -3680,7 +3706,7 @@
 	}
 	exports.getPlayer = getPlayer;
 	function getGamePlayer(_a) {
-	    var _b = _a === void 0 ? {} : _a, _c = _b.name, name = _c === void 0 ? exports.INITIAL_NAME : _c, _d = _b.avatar, avatar = _d === void 0 ? exports.INITIAL_AVATAR : _d, _e = _b.token, token = _e === void 0 ? exports.INITIAL_TOKEN : _e, _f = _b.role, role = _f === void 0 ? Roles_1["default"].INHABITANT : _f;
+	    var _b = _a === void 0 ? {} : _a, _c = _b.name, name = _c === void 0 ? exports.INITIAL_NAME : _c, _d = _b.avatar, avatar = _d === void 0 ? exports.INITIAL_AVATAR : _d, _e = _b.token, token = _e === void 0 ? exports.INITIAL_TOKEN : _e, _f = _b.role, role = _f === void 0 ? Roles_1.default.INHABITANT : _f;
 	    return { name: name, avatar: avatar, token: token, role: role };
 	}
 	exports.getGamePlayer = getGamePlayer;

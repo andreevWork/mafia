@@ -14,7 +14,7 @@ import {getMaxRepeatValue} from "../utils/helpers";
 
 
 
-export default function GameStatusReducer (state: GameState<GameStatus> = InitialGameState, action: IGameAction): GameState<GameStatus> {
+export default function GameStatusReducer (state: GameState = InitialGameState, action: IGameAction): GameState {
     let round_data: RoundData = state.round_data || {};
     let players: Array<GamePlayer> = state.players;
     let win_role: Roles;

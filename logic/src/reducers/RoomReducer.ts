@@ -6,7 +6,7 @@ import {MIN_PLAYERS} from "../entity/GameEnvironment";
 
 
 
-export default function RoomReducer (state: RoomState<RoomStatus> = InitialRoomState, action: IRoomAction): RoomState<RoomStatus> {
+export default function RoomReducer (state: RoomState = InitialRoomState, action: IRoomAction): RoomState {
     switch(action.type) {
         case RoomAction.CREATE_ROOM:
             return getNewState(InitialRoomState, ['time_create', 'time_last_update'], {

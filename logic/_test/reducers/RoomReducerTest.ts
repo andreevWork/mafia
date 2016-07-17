@@ -8,7 +8,7 @@ import {MIN_PLAYERS} from "../../src/entity/GameEnvironment";
 
 
 describe('RoomReducer', () => {
-    let state: RoomState<RoomStatus>,
+    let state: RoomState,
         now: number,
         player: Player;
 

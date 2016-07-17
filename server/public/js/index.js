@@ -44,10 +44,7 @@
 /* 0 */
 /***/ function(module, exports) {
 
-	"use strict";
-	var b = 324, c = 'dfsrgwr';
-	console.log(a);
-
+	
 
 /***/ }
 /******/ ]);

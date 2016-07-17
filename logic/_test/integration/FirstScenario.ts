@@ -27,7 +27,7 @@ import {getPlayer} from "../mocks/PlayersMocks";
 import * as _ from 'underscore';
 import Roles from "../../src/entity/Roles";
 
-let store: IStore<GameState<GameStatus>> = createStore(GameReducer),
+let store: IStore<GameState> = createStore(GameReducer),
     name_1 = 'Bob', token_1 = '23rfew4',
     name_2 = 'Bill', token_2 = 'r32fewa',
     name_3 = 'Rob', token_3 = 'asdf4332',
@@ -46,7 +46,7 @@ let store: IStore<GameState<GameStatus>> = createStore(GameReducer),
 
 describe('Первый сценарий для теста игрового редьюсера', () => {
     // Состояние в которое будет писаться, то что ожидается от игрового мира
-    let reference_state: GameState<GameStatus>;
+    let reference_state: GameState;
 
 
     it('Проверка что хранилище создалось с начальным объектом', () => {

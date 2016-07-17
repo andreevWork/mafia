@@ -12,7 +12,30 @@ interface BaseState<Status> {
     time_last_update_players: number;
 }
 
-export interface RoomState<Status> extends BaseState<Status> {
+interface BaseClientState<Status> {
+    status: Status;
+    time_create: number;
+}
+
+export interface RoomMainClientState extends BaseClientState<RoomStatus> {
+    players: Array<Player>;
+    is_ready: boolean;
+    token?: string;
+    public_url?: string;
+}
+
+export interface GameMainClientState extends BaseClientState<GameStatus> {
+    round_number: number;
+    round_data: RoundData;
+    win_role?: Roles; // Роль которая, выйграла игру
+}
+
+export interface StateMainClient {
+    room: RoomMainClientState,
+    game: GameMainClientState,
+}
+
+export interface RoomState extends BaseState<RoomStatus> {
     players: Array<Player>;
     is_ready: boolean;
     token?: string;
@@ -20,7 +43,7 @@ export interface RoomState<Status> extends BaseState<Status> {
 }
 
 
-export interface GameState<Status> extends BaseState<Status> {
+export interface GameState extends BaseState<GameStatus> {
     players: Array<GamePlayer>;
     round_number: number;
     vote_variants: Array<string>;
@@ -40,7 +63,7 @@ export interface RoundData {
 }
 
 
-export const InitialGameState: GameState<GameStatus> = {
+export const InitialGameState: GameState = {
     time_last_update: 0,
     time_last_update_players: 0,
     time_create: 0,
@@ -53,7 +76,7 @@ export const InitialGameState: GameState<GameStatus> = {
     round_data: null
 };
 
-export const InitialRoomState: RoomState<RoomStatus> = {
+export const InitialRoomState: RoomState = {
     time_last_update: 0,
     time_last_update_players: 0,
     time_create: 0,

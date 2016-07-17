@@ -14,7 +14,7 @@ import {VoteObject} from "../../src/entity/Vote";
 
 
 describe('GameStatusReducer', () => {
-    let state: GameState<GameStatus>,
+    let state: GameState,
         status: GameStatus,
         now: number;
 

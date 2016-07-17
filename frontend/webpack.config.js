@@ -1,6 +1,5 @@
 module.exports = {
     entry: {
-        index: './typescript/index.ts',
         room: './typescript/room.ts',
         player: './typescript/player.ts'
     },
@@ -10,14 +9,14 @@ module.exports = {
     },
 
     resolve: {
-        extensions: ["", ".ts", ".js"]
+        extensions: ["", ".ts", ".tsx", ".js"]
     },
 
     module: {
         loaders: [
             {
-                test: /\.ts$/,
-                loader: "ts"
+                test: /\.tsx?$/,
+                loader: "babel?presets[]=react!ts"
             }
         ]
     }

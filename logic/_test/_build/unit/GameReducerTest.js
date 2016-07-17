@@ -58,12 +58,12 @@
 	        now = Date.now();
 	    });
 	    it('initial state', function () {
-	        state = GameReducer_1["default"](undefined, { type: 'test_initial' });
+	        state = GameReducer_1.default(undefined, { type: 'test_initial' });
 	        expect(state).toEqual(States_1.InitialGameState);
 	    });
 	    it('create game', function () {
 	        var len = 8;
-	        state = GameReducer_1["default"](undefined, GameAction_1["default"].createGame(PlayersMocks_1.getGamePlayerArray(len)));
+	        state = GameReducer_1.default(undefined, GameAction_1.default.createGame(PlayersMocks_1.getGamePlayerArray(len)));
 	        expect(state.status).toEqual(GameStatus_1.GameStatus.START_THE_GAME);
 	        expect(state.time_last_update).not.toBeLessThan(now);
 	        expect(state.time_last_update_players).not.toBeLessThan(now);
@@ -72,14 +72,14 @@
 	    });
 	    it('vote', function () {
 	        var for_whom_token = ' wedf443', another_token = 'dsf43f';
-	        state = GameReducer_1["default"](GameStateMocks_1.getGameStateAfterVote([{ who_token: another_token }, { who_token: PlayersMocks_1.INITIAL_TOKEN }]), GameAction_1["default"].vote(PlayersMocks_1.INITIAL_TOKEN, for_whom_token));
+	        state = GameReducer_1.default(GameStateMocks_1.getGameStateAfterVote([{ who_token: another_token }, { who_token: PlayersMocks_1.INITIAL_TOKEN }]), GameAction_1.default.vote(PlayersMocks_1.INITIAL_TOKEN, for_whom_token));
 	        expect(_.findWhere(state.votes, { who_token: another_token }).for_whom_token).toBeUndefined();
 	        expect(_.findWhere(state.votes, { who_token: PlayersMocks_1.INITIAL_TOKEN }).for_whom_token).toBe(for_whom_token);
 	    });
 	    it('голосовать можно только раз', function () {
 	        var for_whom_token = ' wedf443', another_token = 'dsf43f';
-	        state = GameReducer_1["default"](_.extend({}, States_1.InitialGameState, { votes: [{ who_token: another_token }, { who_token: PlayersMocks_1.INITIAL_TOKEN }] }), GameAction_1["default"].vote(PlayersMocks_1.INITIAL_TOKEN, for_whom_token));
-	        state = GameReducer_1["default"](state, GameAction_1["default"].vote(PlayersMocks_1.INITIAL_TOKEN, another_token));
+	        state = GameReducer_1.default(_.extend({}, States_1.InitialGameState, { votes: [{ who_token: another_token }, { who_token: PlayersMocks_1.INITIAL_TOKEN }] }), GameAction_1.default.vote(PlayersMocks_1.INITIAL_TOKEN, for_whom_token));
+	        state = GameReducer_1.default(state, GameAction_1.default.vote(PlayersMocks_1.INITIAL_TOKEN, another_token));
 	        expect(_.findWhere(state.votes, { who_token: another_token }).for_whom_token).toBeUndefined();
 	        expect(_.findWhere(state.votes, { who_token: PlayersMocks_1.INITIAL_TOKEN }).for_whom_token).toBe(for_whom_token);
 	    });
@@ -99,14 +99,14 @@
 	function GameReducer(state, action) {
 	    if (state === void 0) { state = States_1.InitialGameState; }
 	    switch (action.type) {
-	        case GameAction_1["default"].CREATE_GAME:
+	        case GameAction_1.default.CREATE_GAME:
 	            return States_1.getNewState(States_1.InitialGameState, ['time_create', 'time_last_update', 'time_last_update_players'], {
 	                status: GameStatus_1.GameStatus.START_THE_GAME,
 	                players: action.payload.players
 	            });
-	        case GameAction_1["default"].NEXT_GAME_STEP:
-	            return GameStatusReducer_1["default"](state, action);
-	        case GameAction_1["default"].VOTE:
+	        case GameAction_1.default.NEXT_GAME_STEP:
+	            return GameStatusReducer_1.default(state, action);
+	        case GameAction_1.default.VOTE:
 	            if (state.votes.length && !~_.pluck(state.votes, 'who_token').indexOf(action.payload.who_token)) {
 	                return state;
 	            }
@@ -119,8 +119,8 @@
 	            return state;
 	    }
 	}
-	exports.__esModule = true;
-	exports["default"] = GameReducer;
+	Object.defineProperty(exports, "__esModule", { value: true });
+	exports.default = GameReducer;
 
 
 /***/ },
@@ -1746,8 +1746,8 @@
 	    }
 	    GameAction.vote = vote;
 	})(GameAction || (GameAction = {}));
-	exports.__esModule = true;
-	exports["default"] = GameAction;
+	Object.defineProperty(exports, "__esModule", { value: true });
+	exports.default = GameAction;
 
 
 /***/ },
@@ -1783,15 +1783,15 @@
 	    function getActiveRole(game_status) {
 	        switch (game_status) {
 	            case GameStatus.VOTE_MAFIA:
-	                return [Roles_1["default"].MAFIA];
+	                return [Roles_1.default.MAFIA];
 	            case GameStatus.VOTE_DOCTOR:
-	                return [Roles_1["default"].DOCTOR];
+	                return [Roles_1.default.DOCTOR];
 	            case GameStatus.VOTE_WHORE:
-	                return [Roles_1["default"].WHORE];
+	                return [Roles_1.default.WHORE];
 	            case GameStatus.VOTE_COMMISSAR:
-	                return [Roles_1["default"].COMMISSAR];
+	                return [Roles_1.default.COMMISSAR];
 	            case GameStatus.VOTE_INHABITANT:
-	                return [Roles_1["default"].MAFIA, Roles_1["default"].DOCTOR, Roles_1["default"].INHABITANT, Roles_1["default"].WHORE, Roles_1["default"].COMMISSAR];
+	                return [Roles_1.default.MAFIA, Roles_1.default.DOCTOR, Roles_1.default.INHABITANT, Roles_1.default.WHORE, Roles_1.default.COMMISSAR];
 	            default:
 	                return null;
 	        }
@@ -1829,26 +1829,26 @@
 	            case GameStatus.FALL_ASLEEP_COMMISSAR:
 	                return GameStatus.WAKE_UP_INHABITANT;
 	            case GameStatus.FALL_ASLEEP_MAFIA:
-	                if (_.findWhere(state.players, { role: Roles_1["default"].DOCTOR })) {
+	                if (_.findWhere(state.players, { role: Roles_1.default.DOCTOR })) {
 	                    return GameStatus.WAKE_UP_DOCTOR;
 	                }
-	                if (_.findWhere(state.players, { role: Roles_1["default"].WHORE })) {
+	                if (_.findWhere(state.players, { role: Roles_1.default.WHORE })) {
 	                    return GameStatus.WAKE_UP_WHORE;
 	                }
-	                if (_.findWhere(state.players, { role: Roles_1["default"].COMMISSAR })) {
+	                if (_.findWhere(state.players, { role: Roles_1.default.COMMISSAR })) {
 	                    return GameStatus.WAKE_UP_COMMISSAR;
 	                }
 	                return GameStatus.WAKE_UP_INHABITANT;
 	            case GameStatus.FALL_ASLEEP_DOCTOR:
-	                if (_.findWhere(state.players, { role: Roles_1["default"].WHORE })) {
+	                if (_.findWhere(state.players, { role: Roles_1.default.WHORE })) {
 	                    return GameStatus.WAKE_UP_WHORE;
 	                }
-	                if (_.findWhere(state.players, { role: Roles_1["default"].COMMISSAR })) {
+	                if (_.findWhere(state.players, { role: Roles_1.default.COMMISSAR })) {
 	                    return GameStatus.WAKE_UP_COMMISSAR;
 	                }
 	                return GameStatus.WAKE_UP_INHABITANT;
 	            case GameStatus.FALL_ASLEEP_WHORE:
-	                if (_.findWhere(state.players, { role: Roles_1["default"].COMMISSAR })) {
+	                if (_.findWhere(state.players, { role: Roles_1.default.COMMISSAR })) {
 	                    return GameStatus.WAKE_UP_COMMISSAR;
 	                }
 	                return GameStatus.WAKE_UP_INHABITANT;
@@ -1871,8 +1871,34 @@
 	    Roles[Roles["COMMISSAR"] = 3] = "COMMISSAR";
 	    Roles[Roles["WHORE"] = 4] = "WHORE";
 	})(Roles || (Roles = {}));
-	exports.__esModule = true;
-	exports["default"] = Roles;
+	exports.RolesMapping = {};
+	exports.RolesMapping[Roles.INHABITANT] = {
+	    title: 'Мирные жители',
+	    description: 'Играют только “днем”, могут в это время суток, с помощью голосования, казнить одного из игроков. До конца игры не знают, кто из игроков за кого играет.',
+	    card_img: 'inhabitant.png'
+	};
+	exports.RolesMapping[Roles.MAFIA] = {
+	    title: 'Мафия',
+	    description: 'Днем прикидываются мирными жителями, ночью просыпаются и убивают мирных жителей. Все Мафиози знают друг друга.',
+	    card_img: 'mafia.png'
+	};
+	exports.RolesMapping[Roles.DOCTOR] = {
+	    title: 'Доктор',
+	    description: 'Играет за жителей. Игрок, получивший эту роль, может спасти ночью от смерти одного из игроков.',
+	    card_img: 'doctor.png'
+	};
+	exports.RolesMapping[Roles.COMMISSAR] = {
+	    title: 'Комиссар',
+	    description: 'Играет за жителей. Просыпаясь ночью и выбрав одного игрока, он получает ответ на вопрос, является ли указанный человек мафиози.',
+	    card_img: 'commissar.png'
+	};
+	exports.RolesMapping[Roles.WHORE] = {
+	    title: 'Путана',
+	    description: 'Играет за жителей. Ночью путана выбирает одного из игроков, которого она спасает от смерти. Отличие только в том, что если убивают доктора, то пациент остается жив. Если же представительница древнейшей профессии сама становится ночной жертвой мафии, то вместе с ней погибает и ее клиент.',
+	    card_img: 'whore.png'
+	};
+	Object.defineProperty(exports, "__esModule", { value: true });
+	exports.default = Roles;
 
 
 /***/ },
@@ -1898,10 +1924,10 @@
 	                execution = helpers_1.getMaxRepeatValue(_.pluck(state.votes, 'for_whom_token'));
 	            }
 	            if (Player_1.Player.isEqualMafiaAndOthers(state.players, execution)) {
-	                win_role = Roles_1["default"].MAFIA;
+	                win_role = Roles_1.default.MAFIA;
 	            }
 	            if (!Player_1.Player.hasMafia(state.players, execution)) {
-	                win_role = Roles_1["default"].INHABITANT;
+	                win_role = Roles_1.default.INHABITANT;
 	            }
 	            return States_1.getNewState(state, ['time_last_update', 'time_last_update_players'], {
 	                status: action.payload.status,
@@ -1916,7 +1942,7 @@
 	                players = players.filter(function (player) { return !~round_data.killed.indexOf(player.token); });
 	            }
 	            if (Player_1.Player.isEqualMafiaAndOthers(players)) {
-	                win_role = Roles_1["default"].MAFIA;
+	                win_role = Roles_1.default.MAFIA;
 	            }
 	            return States_1.getNewState(state, ['time_last_update'], {
 	                status: action.payload.status,
@@ -1937,7 +1963,7 @@
 	            round_data = _.clone(state.round_data);
 	            round_data.killed = [];
 	            round_data.killed = round_data.killed.concat(round_data.mafia_target);
-	            var whore = _.findWhere(state.players, { role: Roles_1["default"].WHORE });
+	            var whore = _.findWhere(state.players, { role: Roles_1.default.WHORE });
 	            if (whore && whore.token === round_data.mafia_target) {
 	                round_data.killed = round_data.killed.concat(round_data.real_man);
 	            }
@@ -2016,8 +2042,8 @@
 	            return state;
 	    }
 	}
-	exports.__esModule = true;
-	exports["default"] = GameStatusReducer;
+	Object.defineProperty(exports, "__esModule", { value: true });
+	exports.default = GameStatusReducer;
 
 
 /***/ },
@@ -2038,14 +2064,14 @@
 	        ]
 	    };
 	    function RolesForPlayers(players) {
-	        var steps = Math.floor((players.length - GameEnvironment_1.MIN_PLAYERS) / GameEnvironment_1.STEP_CHANGE_ROLES) + 1, game_players = _.shuffle(players).map(function (player) { return _.extend({ role: Roles_1["default"].INHABITANT }, player); }), flag_commissar = false, index = 0;
-	        game_players[index++].role = Roles_1["default"].DOCTOR;
-	        game_players[index++].role = Roles_1["default"].WHORE;
+	        var steps = Math.floor((players.length - GameEnvironment_1.MIN_PLAYERS) / GameEnvironment_1.STEP_CHANGE_ROLES) + 1, game_players = _.shuffle(players).map(function (player) { return _.extend({ role: Roles_1.default.INHABITANT }, player); }), flag_commissar = false, index = 0;
+	        game_players[index++].role = Roles_1.default.DOCTOR;
+	        game_players[index++].role = Roles_1.default.WHORE;
 	        while (steps--) {
-	            game_players[index++].role = Roles_1["default"].MAFIA;
+	            game_players[index++].role = Roles_1.default.MAFIA;
 	            if (steps % 2 !== 0) {
 	                if (!flag_commissar) {
-	                    game_players[index++].role = Roles_1["default"].COMMISSAR;
+	                    game_players[index++].role = Roles_1.default.COMMISSAR;
 	                    flag_commissar = true;
 	                }
 	            }
@@ -2059,7 +2085,7 @@
 	        players.forEach(function (player) {
 	            if (remove_in_future_token === player.token)
 	                return;
-	            if (player.role === Roles_1["default"].MAFIA) {
+	            if (player.role === Roles_1.default.MAFIA) {
 	                mafia_count++;
 	            }
 	            else {
@@ -2075,7 +2101,7 @@
 	        players.forEach(function (player) {
 	            if (remove_in_future_token === player.token)
 	                return;
-	            if (player.role === Roles_1["default"].MAFIA) {
+	            if (player.role === Roles_1.default.MAFIA) {
 	                mafia_count++;
 	            }
 	        });
@@ -2135,7 +2161,7 @@
 	}
 	exports.getPlayer = getPlayer;
 	function getGamePlayer(_a) {
-	    var _b = _a === void 0 ? {} : _a, _c = _b.name, name = _c === void 0 ? exports.INITIAL_NAME : _c, _d = _b.avatar, avatar = _d === void 0 ? exports.INITIAL_AVATAR : _d, _e = _b.token, token = _e === void 0 ? exports.INITIAL_TOKEN : _e, _f = _b.role, role = _f === void 0 ? Roles_1["default"].INHABITANT : _f;
+	    var _b = _a === void 0 ? {} : _a, _c = _b.name, name = _c === void 0 ? exports.INITIAL_NAME : _c, _d = _b.avatar, avatar = _d === void 0 ? exports.INITIAL_AVATAR : _d, _e = _b.token, token = _e === void 0 ? exports.INITIAL_TOKEN : _e, _f = _b.role, role = _f === void 0 ? Roles_1.default.INHABITANT : _f;
 	    return { name: name, avatar: avatar, token: token, role: role };
 	}
 	exports.getGamePlayer = getGamePlayer;

@@ -44,9 +44,7 @@
 /* 0 */
 /***/ function(module, exports) {
 
-	var b = 1111;
-	console.log(a);
-
+	
 
 /***/ }
 /******/ ]);

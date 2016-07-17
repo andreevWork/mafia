@@ -57,49 +57,49 @@
 	        now = Date.now();
 	    });
 	    it('initial state', function () {
-	        state = RoomReducer_1["default"](undefined, { type: 'test_initial' });
+	        state = RoomReducer_1.default(undefined, { type: 'test_initial' });
 	        expect(state).toEqual(States_1.InitialRoomState);
 	    });
 	    it('create room', function () {
-	        state = RoomReducer_1["default"](undefined, RoomAction_1["default"].createRoom());
+	        state = RoomReducer_1.default(undefined, RoomAction_1.default.createRoom());
 	        expect(state.time_create).not.toBeLessThan(now);
 	        expect(state.time_last_update).not.toBeLessThan(now);
-	        expect(state.status).toBe(RoomStatus_1["default"].WAITING_PLAYERS);
+	        expect(state.status).toBe(RoomStatus_1.default.WAITING_PLAYERS);
 	        expect(state.players.length).toBe(0);
 	    });
 	    it('add players', function () {
 	        player = PlayersMocks_1.getPlayer('Bob');
-	        state = RoomReducer_1["default"](undefined, RoomAction_1["default"].addPlayer(player));
+	        state = RoomReducer_1.default(undefined, RoomAction_1.default.addPlayer(player));
 	        expect(state.players.length).toEqual(1);
 	        expect(state.players[0]).toEqual(player);
 	        expect(state.time_last_update).not.toBeLessThan(now);
 	        player = PlayersMocks_1.getPlayer('Rob');
 	        now = Date.now();
-	        state = RoomReducer_1["default"](state, { type: RoomAction_1["default"].ADD_PLAYER, payload: player });
+	        state = RoomReducer_1.default(state, { type: RoomAction_1.default.ADD_PLAYER, payload: player });
 	        expect(state.players.length).toEqual(2);
 	        expect(state.players[1]).toEqual(player);
 	        expect(state.time_last_update).not.toBeLessThan(now);
 	    });
 	    it('add players после добавления минимального числа игроков, флаг готовности становится true', function () {
 	        player = PlayersMocks_1.getPlayer('Bob');
-	        state = RoomReducer_1["default"](undefined, RoomAction_1["default"].addPlayer(player));
+	        state = RoomReducer_1.default(undefined, RoomAction_1.default.addPlayer(player));
 	        expect(state.players.length).toEqual(1);
 	        expect(state.is_ready).toBeFalsy();
 	        player = PlayersMocks_1.getPlayer();
-	        state = RoomReducer_1["default"](state, { type: RoomAction_1["default"].ADD_PLAYER, payload: player });
+	        state = RoomReducer_1.default(state, { type: RoomAction_1.default.ADD_PLAYER, payload: player });
 	        player = PlayersMocks_1.getPlayer();
-	        state = RoomReducer_1["default"](state, { type: RoomAction_1["default"].ADD_PLAYER, payload: player });
+	        state = RoomReducer_1.default(state, { type: RoomAction_1.default.ADD_PLAYER, payload: player });
 	        player = PlayersMocks_1.getPlayer();
-	        state = RoomReducer_1["default"](state, { type: RoomAction_1["default"].ADD_PLAYER, payload: player });
+	        state = RoomReducer_1.default(state, { type: RoomAction_1.default.ADD_PLAYER, payload: player });
 	        expect(state.is_ready).toBeFalsy();
 	        player = PlayersMocks_1.getPlayer();
-	        state = RoomReducer_1["default"](state, { type: RoomAction_1["default"].ADD_PLAYER, payload: player });
+	        state = RoomReducer_1.default(state, { type: RoomAction_1.default.ADD_PLAYER, payload: player });
 	        expect(state.players.length).toEqual(GameEnvironment_1.MIN_PLAYERS);
 	        expect(state.is_ready).toBeTruthy();
 	    });
 	    it('start play', function () {
-	        state = RoomReducer_1["default"](undefined, RoomAction_1["default"].startPlay());
-	        expect(state.status).toBe(RoomStatus_1["default"].PLAYING);
+	        state = RoomReducer_1.default(undefined, RoomAction_1.default.startPlay());
+	        expect(state.status).toBe(RoomStatus_1.default.PLAYING);
 	        expect(state.time_last_update).toBeLessThan(now);
 	        expect(state.time_last_update_players).toBeLessThan(now);
 	    });
@@ -1710,8 +1710,34 @@
 	    Roles[Roles["COMMISSAR"] = 3] = "COMMISSAR";
 	    Roles[Roles["WHORE"] = 4] = "WHORE";
 	})(Roles || (Roles = {}));
-	exports.__esModule = true;
-	exports["default"] = Roles;
+	exports.RolesMapping = {};
+	exports.RolesMapping[Roles.INHABITANT] = {
+	    title: 'Мирные жители',
+	    description: 'Играют только “днем”, могут в это время суток, с помощью голосования, казнить одного из игроков. До конца игры не знают, кто из игроков за кого играет.',
+	    card_img: 'inhabitant.png'
+	};
+	exports.RolesMapping[Roles.MAFIA] = {
+	    title: 'Мафия',
+	    description: 'Днем прикидываются мирными жителями, ночью просыпаются и убивают мирных жителей. Все Мафиози знают друг друга.',
+	    card_img: 'mafia.png'
+	};
+	exports.RolesMapping[Roles.DOCTOR] = {
+	    title: 'Доктор',
+	    description: 'Играет за жителей. Игрок, получивший эту роль, может спасти ночью от смерти одного из игроков.',
+	    card_img: 'doctor.png'
+	};
+	exports.RolesMapping[Roles.COMMISSAR] = {
+	    title: 'Комиссар',
+	    description: 'Играет за жителей. Просыпаясь ночью и выбрав одного игрока, он получает ответ на вопрос, является ли указанный человек мафиози.',
+	    card_img: 'commissar.png'
+	};
+	exports.RolesMapping[Roles.WHORE] = {
+	    title: 'Путана',
+	    description: 'Играет за жителей. Ночью путана выбирает одного из игроков, которого она спасает от смерти. Отличие только в том, что если убивают доктора, то пациент остается жив. Если же представительница древнейшей профессии сама становится ночной жертвой мафии, то вместе с ней погибает и ее клиент.',
+	    card_img: 'whore.png'
+	};
+	Object.defineProperty(exports, "__esModule", { value: true });
+	exports.default = Roles;
 
 
 /***/ },
@@ -1741,7 +1767,7 @@
 	}
 	exports.getPlayer = getPlayer;
 	function getGamePlayer(_a) {
-	    var _b = _a === void 0 ? {} : _a, _c = _b.name, name = _c === void 0 ? exports.INITIAL_NAME : _c, _d = _b.avatar, avatar = _d === void 0 ? exports.INITIAL_AVATAR : _d, _e = _b.token, token = _e === void 0 ? exports.INITIAL_TOKEN : _e, _f = _b.role, role = _f === void 0 ? Roles_1["default"].INHABITANT : _f;
+	    var _b = _a === void 0 ? {} : _a, _c = _b.name, name = _c === void 0 ? exports.INITIAL_NAME : _c, _d = _b.avatar, avatar = _d === void 0 ? exports.INITIAL_AVATAR : _d, _e = _b.token, token = _e === void 0 ? exports.INITIAL_TOKEN : _e, _f = _b.role, role = _f === void 0 ? Roles_1.default.INHABITANT : _f;
 	    return { name: name, avatar: avatar, token: token, role: role };
 	}
 	exports.getGamePlayer = getGamePlayer;
@@ -1764,21 +1790,25 @@
 	function RoomReducer(state, action) {
 	    if (state === void 0) { state = States_1.InitialRoomState; }
 	    switch (action.type) {
-	        case RoomAction_1["default"].CREATE_ROOM:
-	            return States_1.getNewState(States_1.InitialRoomState, ['time_create', 'time_last_update'], { status: RoomStatus_1["default"].WAITING_PLAYERS });
-	        case RoomAction_1["default"].ADD_PLAYER:
+	        case RoomAction_1.default.CREATE_ROOM:
+	            return States_1.getNewState(States_1.InitialRoomState, ['time_create', 'time_last_update'], {
+	                status: RoomStatus_1.default.WAITING_PLAYERS,
+	                token: action.token,
+	                public_url: action.public_url
+	            });
+	        case RoomAction_1.default.ADD_PLAYER:
 	            return States_1.getNewState(state, ['time_last_update', 'time_last_update_players'], {
 	                players: state.players.concat(action.payload),
 	                is_ready: state.players.length + 1 >= GameEnvironment_1.MIN_PLAYERS ? true : false
 	            });
-	        case RoomAction_1["default"].START_PLAY:
-	            return States_1.getNewState(state, [], { status: RoomStatus_1["default"].PLAYING });
+	        case RoomAction_1.default.START_PLAY:
+	            return States_1.getNewState(state, [], { status: RoomStatus_1.default.PLAYING });
 	        default:
 	            return state;
 	    }
 	}
-	exports.__esModule = true;
-	exports["default"] = RoomReducer;
+	Object.defineProperty(exports, "__esModule", { value: true });
+	exports.default = RoomReducer;
 
 
 /***/ },
@@ -1794,9 +1824,11 @@
 	})(RoomAction || (RoomAction = {}));
 	var RoomAction;
 	(function (RoomAction) {
-	    function createRoom() {
+	    function createRoom(token, public_url) {
 	        return {
-	            type: RoomAction.CREATE_ROOM
+	            type: RoomAction.CREATE_ROOM,
+	            token: token,
+	            public_url: public_url
 	        };
 	    }
 	    RoomAction.createRoom = createRoom;
@@ -1814,8 +1846,8 @@
 	    }
 	    RoomAction.startPlay = startPlay;
 	})(RoomAction || (RoomAction = {}));
-	exports.__esModule = true;
-	exports["default"] = RoomAction;
+	Object.defineProperty(exports, "__esModule", { value: true });
+	exports.default = RoomAction;
 
 
 /***/ },
@@ -1835,8 +1867,8 @@
 	    }
 	    RoomStatus.isWaitingPlayers = isWaitingPlayers;
 	})(RoomStatus || (RoomStatus = {}));
-	exports.__esModule = true;
-	exports["default"] = RoomStatus;
+	Object.defineProperty(exports, "__esModule", { value: true });
+	exports.default = RoomStatus;
 
 
 /***/ }

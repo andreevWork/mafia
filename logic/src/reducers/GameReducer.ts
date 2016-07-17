@@ -8,7 +8,7 @@ import Roles from "../entity/Roles";
 import GameStatusReducer from "./GameStatusReducer";
 
 
-export default function GameReducer (state: GameState<GameStatus> = InitialGameState, action: IGameAction): GameState<GameStatus> {
+export default function GameReducer (state: GameState = InitialGameState, action: IGameAction): GameState {
     switch(action.type) {
         case GameAction.CREATE_GAME:
             return getNewState(InitialGameState, ['time_create', 'time_last_update', 'time_last_update_players'], {

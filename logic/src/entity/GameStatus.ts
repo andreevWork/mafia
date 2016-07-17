@@ -60,7 +60,7 @@ export namespace GameStatusHelpers {
     /*
      * Метод, который на основании текущего состояния, отдаст следующий статус для игры
      */
-    export function getNextStatus(state: GameState<GameStatus>): GameStatus {
+    export function getNextStatus(state: GameState): GameStatus {
         switch (state.status) {
             // После начала игры наступает первая ночь и каждый раз после конца дня
             case GameStatus.START_THE_GAME:

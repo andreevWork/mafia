@@ -46,55 +46,348 @@ module.exports =
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
-	var redux_1 = __webpack_require__(28);
-	var RoomReducer_1 = __webpack_require__(41);
-	var RoomAction_1 = __webpack_require__(44);
-	var _ = __webpack_require__(43);
-	var cookie_parser = __webpack_require__(48);
-	var WebSocketServer = (function () {
-	    function WebSocketServer(port, ws_server) {
-	        this.rooms = [];
-	        this.server = new ws_server({ port: port });
-	        this.initListen();
-	    }
-	    WebSocketServer.prototype.initListen = function () {
+	var cookie_parser = __webpack_require__(1);
+	var Roles_1 = __webpack_require__(2);
+	var RoomServer_1 = __webpack_require__(3);
+	var helpers_1 = __webpack_require__(29);
+	var config = __webpack_require__(30);
+	exports.ROOM_COOKIE_TOKEN = 'ROOMID';
+	var GameServer = (function () {
+	    function GameServer(web_socket_server_rooms) {
 	        var _this = this;
-	        this.server.on('connection', function (ws) {
-	            var cookie = ws.upgradeReq.headers.cookie && cookie_parser.parse(ws.upgradeReq.headers.cookie), has_room = false;
-	            _this.rooms = _this.rooms.filter(function (room) { return !room.isEmpty(); });
-	            if (cookie && cookie.room_token) {
-	                _this.rooms.forEach(function (room) {
-	                    if (room.getToken() === cookie.room_token) {
-	                        console.log('set new connection');
-	                        room.setNewConnection(ws);
-	                        has_room = true;
-	                    }
-	                });
+	        this.rooms = [];
+	        var room_cookie_token = {};
+	        web_socket_server_rooms.on("headers" + config.web_socket_path.room, function (headers, upgradeReqHeaders) {
+	            var cookie = upgradeReqHeaders.cookie ? cookie_parser.parse(upgradeReqHeaders.cookie) : {};
+	            if (!_this.hasRoom(cookie[exports.ROOM_COOKIE_TOKEN])) {
+	                var token = helpers_1.getRandomString(32);
+	                room_cookie_token[upgradeReqHeaders['sec-websocket-key']] = token;
+	                headers.push("Set-Cookie: " + cookie_parser.serialize(exports.ROOM_COOKIE_TOKEN, token, {
+	                    httpOnly: true
+	                }));
 	            }
-	            if (!has_room) {
-	                _this.rooms.push(new RoomServer(ws));
+	        });
+	        web_socket_server_rooms.on("connection" + config.web_socket_path.room, function (socket) {
+	            var cookie = socket.upgradeReq.headers.cookie ? cookie_parser.parse(socket.upgradeReq.headers.cookie) : {}, exist_room;
+	            exist_room = _this.getRoomByToken(cookie[exports.ROOM_COOKIE_TOKEN]);
+	            if (exist_room) {
+	                if (exist_room.hasConnection()) {
+	                    GameServer.killSocket(socket);
+	                    return;
+	                }
+	                console.log('set new connection');
+	                exist_room.setNewConnection(socket);
+	            }
+	            else {
+	                _this.rooms.push(new RoomServer_1.default(socket, room_cookie_token[socket.upgradeReq.headers['sec-websocket-key']], function () { return _this.removeEmptyRooms(); }));
+	                delete room_cookie_token[socket.upgradeReq.headers['sec-websocket-key']];
 	            }
 	            console.log(_this.rooms.length);
 	        });
+	    }
+	    GameServer.killSocket = function (socket) {
+	        socket.send(JSON.stringify('exist!!'));
+	        socket.close(1000);
 	    };
-	    return WebSocketServer;
+	    GameServer.prototype.removeEmptyRooms = function () {
+	        this.rooms = this.rooms.filter(function (room) { return !room.isEmpty(); });
+	    };
+	    GameServer.prototype.getRoomByToken = function (token) {
+	        return token && this.rooms.find(function (room) { return room.getToken() === token; });
+	    };
+	    GameServer.prototype.getRoomByPublicUrl = function (public_url) {
+	        return public_url && this.rooms.find(function (room) { return room.getPublicUrl() === public_url; });
+	    };
+	    ;
+	    GameServer.prototype.hasRoom = function (token) {
+	        return !!this.getRoomByToken(token) || !!this.getRoomByPublicUrl(token);
+	    };
+	    GameServer.prototype.removeRoom = function (token) {
+	        this.rooms = this.rooms.filter(function (room) { return room.getToken() !== token; });
+	    };
+	    GameServer.getRoles = function () {
+	        return Roles_1.RolesMapping;
+	    };
+	    GameServer.getRoomToken = function () {
+	        return exports.ROOM_COOKIE_TOKEN;
+	    };
+	    return GameServer;
 	}());
-	exports.WebSocketServer = WebSocketServer;
+	exports.GameServer = GameServer;
+
+
+/***/ },
+/* 1 */
+/***/ function(module, exports) {
+
+	/*!
+	 * cookie
+	 * Copyright(c) 2012-2014 Roman Shtylman
+	 * Copyright(c) 2015 Douglas Christopher Wilson
+	 * MIT Licensed
+	 */
+
+	'use strict';
+
+	/**
+	 * Module exports.
+	 * @public
+	 */
+
+	exports.parse = parse;
+	exports.serialize = serialize;
+
+	/**
+	 * Module variables.
+	 * @private
+	 */
+
+	var decode = decodeURIComponent;
+	var encode = encodeURIComponent;
+	var pairSplitRegExp = /; */;
+
+	/**
+	 * RegExp to match field-content in RFC 7230 sec 3.2
+	 *
+	 * field-content = field-vchar [ 1*( SP / HTAB ) field-vchar ]
+	 * field-vchar   = VCHAR / obs-text
+	 * obs-text      = %x80-FF
+	 */
+
+	var fieldContentRegExp = /^[\u0009\u0020-\u007e\u0080-\u00ff]+$/;
+
+	/**
+	 * Parse a cookie header.
+	 *
+	 * Parse the given cookie header string into an object
+	 * The object has the various cookies as keys(names) => values
+	 *
+	 * @param {string} str
+	 * @param {object} [options]
+	 * @return {object}
+	 * @public
+	 */
+
+	function parse(str, options) {
+	  if (typeof str !== 'string') {
+	    throw new TypeError('argument str must be a string');
+	  }
+
+	  var obj = {}
+	  var opt = options || {};
+	  var pairs = str.split(pairSplitRegExp);
+	  var dec = opt.decode || decode;
+
+	  for (var i = 0; i < pairs.length; i++) {
+	    var pair = pairs[i];
+	    var eq_idx = pair.indexOf('=');
+
+	    // skip things that don't look like key=value
+	    if (eq_idx < 0) {
+	      continue;
+	    }
+
+	    var key = pair.substr(0, eq_idx).trim()
+	    var val = pair.substr(++eq_idx, pair.length).trim();
+
+	    // quoted values
+	    if ('"' == val[0]) {
+	      val = val.slice(1, -1);
+	    }
+
+	    // only assign once
+	    if (undefined == obj[key]) {
+	      obj[key] = tryDecode(val, dec);
+	    }
+	  }
+
+	  return obj;
+	}
+
+	/**
+	 * Serialize data into a cookie header.
+	 *
+	 * Serialize the a name value pair into a cookie string suitable for
+	 * http headers. An optional options object specified cookie parameters.
+	 *
+	 * serialize('foo', 'bar', { httpOnly: true })
+	 *   => "foo=bar; httpOnly"
+	 *
+	 * @param {string} name
+	 * @param {string} val
+	 * @param {object} [options]
+	 * @return {string}
+	 * @public
+	 */
+
+	function serialize(name, val, options) {
+	  var opt = options || {};
+	  var enc = opt.encode || encode;
+
+	  if (typeof enc !== 'function') {
+	    throw new TypeError('option encode is invalid');
+	  }
+
+	  if (!fieldContentRegExp.test(name)) {
+	    throw new TypeError('argument name is invalid');
+	  }
+
+	  var value = enc(val);
+
+	  if (value && !fieldContentRegExp.test(value)) {
+	    throw new TypeError('argument val is invalid');
+	  }
+
+	  var str = name + '=' + value;
+
+	  if (null != opt.maxAge) {
+	    var maxAge = opt.maxAge - 0;
+	    if (isNaN(maxAge)) throw new Error('maxAge should be a Number');
+	    str += '; Max-Age=' + Math.floor(maxAge);
+	  }
+
+	  if (opt.domain) {
+	    if (!fieldContentRegExp.test(opt.domain)) {
+	      throw new TypeError('option domain is invalid');
+	    }
+
+	    str += '; Domain=' + opt.domain;
+	  }
+
+	  if (opt.path) {
+	    if (!fieldContentRegExp.test(opt.path)) {
+	      throw new TypeError('option path is invalid');
+	    }
+
+	    str += '; Path=' + opt.path;
+	  }
+
+	  if (opt.expires) {
+	    if (typeof opt.expires.toUTCString !== 'function') {
+	      throw new TypeError('option expires is invalid');
+	    }
+
+	    str += '; Expires=' + opt.expires.toUTCString();
+	  }
+
+	  if (opt.httpOnly) {
+	    str += '; HttpOnly';
+	  }
+
+	  if (opt.secure) {
+	    str += '; Secure';
+	  }
+
+	  if (opt.sameSite) {
+	    var sameSite = typeof opt.sameSite === 'string'
+	      ? opt.sameSite.toLowerCase() : opt.sameSite;
+
+	    switch (sameSite) {
+	      case true:
+	        str += '; SameSite=Strict';
+	        break;
+	      case 'lax':
+	        str += '; SameSite=Lax';
+	        break;
+	      case 'strict':
+	        str += '; SameSite=Strict';
+	        break;
+	      default:
+	        throw new TypeError('option sameSite is invalid');
+	    }
+	  }
+
+	  return str;
+	}
+
+	/**
+	 * Try decoding a string using a decoding function.
+	 *
+	 * @param {string} str
+	 * @param {function} decode
+	 * @private
+	 */
+
+	function tryDecode(str, decode) {
+	  try {
+	    return decode(str);
+	  } catch (e) {
+	    return str;
+	  }
+	}
+
+
+/***/ },
+/* 2 */
+/***/ function(module, exports) {
+
+	"use strict";
+	var Roles;
+	(function (Roles) {
+	    Roles[Roles["INHABITANT"] = 0] = "INHABITANT";
+	    Roles[Roles["MAFIA"] = 1] = "MAFIA";
+	    Roles[Roles["DOCTOR"] = 2] = "DOCTOR";
+	    Roles[Roles["COMMISSAR"] = 3] = "COMMISSAR";
+	    Roles[Roles["WHORE"] = 4] = "WHORE";
+	})(Roles || (Roles = {}));
+	exports.RolesMapping = {};
+	exports.RolesMapping[Roles.INHABITANT] = {
+	    title: 'Мирные жители',
+	    description: 'Играют только “днем”, могут в это время суток, с помощью голосования, казнить одного из игроков. До конца игры не знают, кто из игроков за кого играет.',
+	    card_img: 'inhabitant.png'
+	};
+	exports.RolesMapping[Roles.MAFIA] = {
+	    title: 'Мафия',
+	    description: 'Днем прикидываются мирными жителями, ночью просыпаются и убивают мирных жителей. Все Мафиози знают друг друга.',
+	    card_img: 'mafia.png'
+	};
+	exports.RolesMapping[Roles.DOCTOR] = {
+	    title: 'Доктор',
+	    description: 'Играет за жителей. Игрок, получивший эту роль, может спасти ночью от смерти одного из игроков.',
+	    card_img: 'doctor.png'
+	};
+	exports.RolesMapping[Roles.COMMISSAR] = {
+	    title: 'Комиссар',
+	    description: 'Играет за жителей. Просыпаясь ночью и выбрав одного игрока, он получает ответ на вопрос, является ли указанный человек мафиози.',
+	    card_img: 'commissar.png'
+	};
+	exports.RolesMapping[Roles.WHORE] = {
+	    title: 'Путана',
+	    description: 'Играет за жителей. Ночью путана выбирает одного из игроков, которого она спасает от смерти. Отличие только в том, что если убивают доктора, то пациент остается жив. Если же представительница древнейшей профессии сама становится ночной жертвой мафии, то вместе с ней погибает и ее клиент.',
+	    card_img: 'whore.png'
+	};
+	Object.defineProperty(exports, "__esModule", { value: true });
+	exports.default = Roles;
+
+
+/***/ },
+/* 3 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	var redux_1 = __webpack_require__(4);
+	var RoomReducer_1 = __webpack_require__(18);
+	var RoomAction_1 = __webpack_require__(21);
+	var GameReducer_1 = __webpack_require__(24);
+	var _ = __webpack_require__(20);
+	var helpers_1 = __webpack_require__(29);
 	var RoomServer = (function () {
-	    function RoomServer(connection) {
+	    function RoomServer(connection, token, clear_callback) {
 	        var _this = this;
+	        this.clear_callback = clear_callback;
 	        this.time_last_update = Date.now();
+	        this.clear_timer_time = 1000 * 60 * 2;
 	        console.log('NEW connection');
-	        var token = getRandomString(32);
-	        var public_url = getRandomString(5);
+	        var public_url = helpers_1.getRandomString(5);
 	        this.store = redux_1.createStore(redux_1.combineReducers({
-	            room: RoomReducer_1["default"]
+	            room: RoomReducer_1.default,
+	            game: GameReducer_1.default
 	        }));
-	        this.store.dispatch(RoomAction_1["default"].createRoom(token, public_url));
+	        this.store.dispatch(RoomAction_1.default.createRoom(token, public_url));
 	        this.store.subscribe(function () {
 	            console.log('store update');
 	            if (_this.store.getState().room.time_last_update > _this.time_last_update) {
-	                _this.sendDataToClient();
+	                _this.sendStateToClient();
 	                _this.time_last_update = Date.now();
 	            }
 	        });
@@ -103,61 +396,129 @@ module.exports =
 	    RoomServer.prototype.getToken = function () {
 	        return this.store.getState().room.token;
 	    };
+	    RoomServer.prototype.getPublicUrl = function () {
+	        return this.store.getState().room.public_url;
+	    };
 	    RoomServer.prototype.isEmpty = function () {
 	        return (this.store === null && this.connection === null) ? true : false;
 	    };
+	    RoomServer.prototype.hasConnection = function () {
+	        return this.connection !== null;
+	    };
 	    RoomServer.prototype.setNewConnection = function (connection) {
 	        var _this = this;
+	        if (this.clear_timer) {
+	            clearTimeout(this.clear_timer);
+	        }
 	        this.connection = connection;
 	        this.connection.on('message', function (message) {
 	            console.log('received: %s', message);
 	        });
 	        this.connection.on('close', function (message) {
 	            _this.connection = null;
-	            setTimeout(function () { return _this.clear(); }, 5000);
+	            _this.clear_timer = setTimeout(function () { return _this.clear(); }, _this.clear_timer_time);
 	        });
-	        this.sendDataToClient();
+	        this.sendStateToClient();
 	    };
 	    RoomServer.prototype.clear = function () {
 	        this.store = null;
 	        this.time_last_update = null;
+	        this.clear_timer = null;
+	        this.clear_callback();
 	    };
-	    RoomServer.prototype.sendDataToClient = function () {
-	        this.connection.send(JSON.stringify(this.getStateRoomForClient()));
+	    RoomServer.prototype.sendStateToClient = function () {
+	        this.sendDataToClient({
+	            type: 'state',
+	            payload: this.getStateForClient()
+	        });
+	    };
+	    RoomServer.prototype.sendDataToClient = function (data) {
+	        this.connection.send(JSON.stringify(data));
+	    };
+	    RoomServer.prototype.getStateForClient = function () {
+	        return {
+	            room: this.getStateRoomForClient(),
+	            game: this.getStateGameForClient()
+	        };
+	    };
+	    RoomServer.prototype.getStateGameForClient = function () {
+	        var state = _.clone(this.store.getState().game);
+	        delete state.players;
+	        delete state.vote_variants;
+	        delete state.votes;
+	        delete state.active_roles;
+	        delete state.prev_round_healing;
+	        delete state.time_last_update;
+	        delete state.time_last_update_players;
+	        return state;
 	    };
 	    RoomServer.prototype.getStateRoomForClient = function () {
 	        var state = _.clone(this.store.getState().room);
+	        delete state.token;
 	        delete state.time_last_update;
 	        delete state.time_last_update_players;
 	        return state;
 	    };
 	    return RoomServer;
 	}());
-	function getRandomString(len) {
-	    var str = '123456789qwertyuiopasdfghjklzxcvbnm', arr_symbols = str.split(''), random_str = '';
-	    while (len--) {
-	        random_str += arr_symbols[Math.floor(Math.random() * str.length)];
-	    }
-	    return random_str;
-	}
+	Object.defineProperty(exports, "__esModule", { value: true });
+	exports.default = RoomServer;
 
 
 /***/ },
-/* 1 */,
-/* 2 */,
-/* 3 */,
-/* 4 */,
-/* 5 */,
-/* 6 */,
-/* 7 */,
-/* 8 */,
-/* 9 */,
-/* 10 */,
-/* 11 */,
-/* 12 */,
-/* 13 */,
-/* 14 */,
-/* 15 */
+/* 4 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(process) {'use strict';
+
+	exports.__esModule = true;
+	exports.compose = exports.applyMiddleware = exports.bindActionCreators = exports.combineReducers = exports.createStore = undefined;
+
+	var _createStore = __webpack_require__(6);
+
+	var _createStore2 = _interopRequireDefault(_createStore);
+
+	var _combineReducers = __webpack_require__(13);
+
+	var _combineReducers2 = _interopRequireDefault(_combineReducers);
+
+	var _bindActionCreators = __webpack_require__(15);
+
+	var _bindActionCreators2 = _interopRequireDefault(_bindActionCreators);
+
+	var _applyMiddleware = __webpack_require__(16);
+
+	var _applyMiddleware2 = _interopRequireDefault(_applyMiddleware);
+
+	var _compose = __webpack_require__(17);
+
+	var _compose2 = _interopRequireDefault(_compose);
+
+	var _warning = __webpack_require__(14);
+
+	var _warning2 = _interopRequireDefault(_warning);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+	/*
+	* This is a dummy function to check if the function name has been altered by minification.
+	* If the function has been minified and NODE_ENV !== 'production', warn the user.
+	*/
+	function isCrushed() {}
+
+	if (process.env.NODE_ENV !== 'production' && typeof isCrushed.name === 'string' && isCrushed.name !== 'isCrushed') {
+	  (0, _warning2["default"])('You are currently using minified code outside of NODE_ENV === \'production\'. ' + 'This means that you are running a slower development build of Redux. ' + 'You can use loose-envify (https://github.com/zertosh/loose-envify) for browserify ' + 'or DefinePlugin for webpack (http://stackoverflow.com/questions/30030031) ' + 'to ensure you have the correct code for your production build.');
+	}
+
+	exports.createStore = _createStore2["default"];
+	exports.combineReducers = _combineReducers2["default"];
+	exports.bindActionCreators = _bindActionCreators2["default"];
+	exports.applyMiddleware = _applyMiddleware2["default"];
+	exports.compose = _compose2["default"];
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(5)))
+
+/***/ },
+/* 5 */
 /***/ function(module, exports) {
 
 	// shim for using process in browser
@@ -254,71 +615,7 @@ module.exports =
 
 
 /***/ },
-/* 16 */,
-/* 17 */,
-/* 18 */,
-/* 19 */,
-/* 20 */,
-/* 21 */,
-/* 22 */,
-/* 23 */,
-/* 24 */,
-/* 25 */,
-/* 26 */,
-/* 27 */,
-/* 28 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/* WEBPACK VAR INJECTION */(function(process) {'use strict';
-
-	exports.__esModule = true;
-	exports.compose = exports.applyMiddleware = exports.bindActionCreators = exports.combineReducers = exports.createStore = undefined;
-
-	var _createStore = __webpack_require__(29);
-
-	var _createStore2 = _interopRequireDefault(_createStore);
-
-	var _combineReducers = __webpack_require__(36);
-
-	var _combineReducers2 = _interopRequireDefault(_combineReducers);
-
-	var _bindActionCreators = __webpack_require__(38);
-
-	var _bindActionCreators2 = _interopRequireDefault(_bindActionCreators);
-
-	var _applyMiddleware = __webpack_require__(39);
-
-	var _applyMiddleware2 = _interopRequireDefault(_applyMiddleware);
-
-	var _compose = __webpack_require__(40);
-
-	var _compose2 = _interopRequireDefault(_compose);
-
-	var _warning = __webpack_require__(37);
-
-	var _warning2 = _interopRequireDefault(_warning);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
-
-	/*
-	* This is a dummy function to check if the function name has been altered by minification.
-	* If the function has been minified and NODE_ENV !== 'production', warn the user.
-	*/
-	function isCrushed() {}
-
-	if (process.env.NODE_ENV !== 'production' && typeof isCrushed.name === 'string' && isCrushed.name !== 'isCrushed') {
-	  (0, _warning2["default"])('You are currently using minified code outside of NODE_ENV === \'production\'. ' + 'This means that you are running a slower development build of Redux. ' + 'You can use loose-envify (https://github.com/zertosh/loose-envify) for browserify ' + 'or DefinePlugin for webpack (http://stackoverflow.com/questions/30030031) ' + 'to ensure you have the correct code for your production build.');
-	}
-
-	exports.createStore = _createStore2["default"];
-	exports.combineReducers = _combineReducers2["default"];
-	exports.bindActionCreators = _bindActionCreators2["default"];
-	exports.applyMiddleware = _applyMiddleware2["default"];
-	exports.compose = _compose2["default"];
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(15)))
-
-/***/ },
-/* 29 */
+/* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -327,11 +624,11 @@ module.exports =
 	exports.ActionTypes = undefined;
 	exports["default"] = createStore;
 
-	var _isPlainObject = __webpack_require__(30);
+	var _isPlainObject = __webpack_require__(7);
 
 	var _isPlainObject2 = _interopRequireDefault(_isPlainObject);
 
-	var _symbolObservable = __webpack_require__(34);
+	var _symbolObservable = __webpack_require__(11);
 
 	var _symbolObservable2 = _interopRequireDefault(_symbolObservable);
 
@@ -585,12 +882,12 @@ module.exports =
 	}
 
 /***/ },
-/* 30 */
+/* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var getPrototype = __webpack_require__(31),
-	    isHostObject = __webpack_require__(32),
-	    isObjectLike = __webpack_require__(33);
+	var getPrototype = __webpack_require__(8),
+	    isHostObject = __webpack_require__(9),
+	    isObjectLike = __webpack_require__(10);
 
 	/** `Object#toString` result references. */
 	var objectTag = '[object Object]';
@@ -661,7 +958,7 @@ module.exports =
 
 
 /***/ },
-/* 31 */
+/* 8 */
 /***/ function(module, exports) {
 
 	/* Built-in method references for those with the same name as other `lodash` methods. */
@@ -682,7 +979,7 @@ module.exports =
 
 
 /***/ },
-/* 32 */
+/* 9 */
 /***/ function(module, exports) {
 
 	/**
@@ -708,7 +1005,7 @@ module.exports =
 
 
 /***/ },
-/* 33 */
+/* 10 */
 /***/ function(module, exports) {
 
 	/**
@@ -743,18 +1040,18 @@ module.exports =
 
 
 /***/ },
-/* 34 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {/* global window */
 	'use strict';
 
-	module.exports = __webpack_require__(35)(global || window || this);
+	module.exports = __webpack_require__(12)(global || window || this);
 
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 35 */
+/* 12 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -779,7 +1076,7 @@ module.exports =
 
 
 /***/ },
-/* 36 */
+/* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {'use strict';
@@ -787,13 +1084,13 @@ module.exports =
 	exports.__esModule = true;
 	exports["default"] = combineReducers;
 
-	var _createStore = __webpack_require__(29);
+	var _createStore = __webpack_require__(6);
 
-	var _isPlainObject = __webpack_require__(30);
+	var _isPlainObject = __webpack_require__(7);
 
 	var _isPlainObject2 = _interopRequireDefault(_isPlainObject);
 
-	var _warning = __webpack_require__(37);
+	var _warning = __webpack_require__(14);
 
 	var _warning2 = _interopRequireDefault(_warning);
 
@@ -909,10 +1206,10 @@ module.exports =
 	    return hasChanged ? nextState : state;
 	  };
 	}
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(15)))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(5)))
 
 /***/ },
-/* 37 */
+/* 14 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -942,7 +1239,7 @@ module.exports =
 	}
 
 /***/ },
-/* 38 */
+/* 15 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -998,7 +1295,7 @@ module.exports =
 	}
 
 /***/ },
-/* 39 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1009,7 +1306,7 @@ module.exports =
 
 	exports["default"] = applyMiddleware;
 
-	var _compose = __webpack_require__(40);
+	var _compose = __webpack_require__(17);
 
 	var _compose2 = _interopRequireDefault(_compose);
 
@@ -1061,7 +1358,7 @@ module.exports =
 	}
 
 /***/ },
-/* 40 */
+/* 17 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -1106,44 +1403,44 @@ module.exports =
 	}
 
 /***/ },
-/* 41 */
+/* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
-	var States_1 = __webpack_require__(42);
-	var RoomAction_1 = __webpack_require__(44);
-	var RoomStatus_1 = __webpack_require__(45);
-	var GameEnvironment_1 = __webpack_require__(46);
+	var States_1 = __webpack_require__(19);
+	var RoomAction_1 = __webpack_require__(21);
+	var RoomStatus_1 = __webpack_require__(22);
+	var GameEnvironment_1 = __webpack_require__(23);
 	function RoomReducer(state, action) {
 	    if (state === void 0) { state = States_1.InitialRoomState; }
 	    switch (action.type) {
-	        case RoomAction_1["default"].CREATE_ROOM:
+	        case RoomAction_1.default.CREATE_ROOM:
 	            return States_1.getNewState(States_1.InitialRoomState, ['time_create', 'time_last_update'], {
-	                status: RoomStatus_1["default"].WAITING_PLAYERS,
+	                status: RoomStatus_1.default.WAITING_PLAYERS,
 	                token: action.token,
 	                public_url: action.public_url
 	            });
-	        case RoomAction_1["default"].ADD_PLAYER:
+	        case RoomAction_1.default.ADD_PLAYER:
 	            return States_1.getNewState(state, ['time_last_update', 'time_last_update_players'], {
 	                players: state.players.concat(action.payload),
 	                is_ready: state.players.length + 1 >= GameEnvironment_1.MIN_PLAYERS ? true : false
 	            });
-	        case RoomAction_1["default"].START_PLAY:
-	            return States_1.getNewState(state, [], { status: RoomStatus_1["default"].PLAYING });
+	        case RoomAction_1.default.START_PLAY:
+	            return States_1.getNewState(state, [], { status: RoomStatus_1.default.PLAYING });
 	        default:
 	            return state;
 	    }
 	}
-	exports.__esModule = true;
-	exports["default"] = RoomReducer;
+	Object.defineProperty(exports, "__esModule", { value: true });
+	exports.default = RoomReducer;
 
 
 /***/ },
-/* 42 */
+/* 19 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
-	var _ = __webpack_require__(43);
+	var _ = __webpack_require__(20);
 	exports.InitialGameState = {
 	    time_last_update: 0,
 	    time_last_update_players: 0,
@@ -1173,7 +1470,7 @@ module.exports =
 
 
 /***/ },
-/* 43 */
+/* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;//     Underscore.js 1.8.3
@@ -2727,15 +3024,15 @@ module.exports =
 
 
 /***/ },
-/* 44 */
+/* 21 */
 /***/ function(module, exports) {
 
 	"use strict";
 	var RoomAction;
 	(function (RoomAction) {
-	    RoomAction[RoomAction["CREATE_ROOM"] = 0] = "CREATE_ROOM";
-	    RoomAction[RoomAction["ADD_PLAYER"] = 1] = "ADD_PLAYER";
-	    RoomAction[RoomAction["START_PLAY"] = 2] = "START_PLAY";
+	    RoomAction[RoomAction["CREATE_ROOM"] = 50] = "CREATE_ROOM";
+	    RoomAction[RoomAction["ADD_PLAYER"] = 51] = "ADD_PLAYER";
+	    RoomAction[RoomAction["START_PLAY"] = 52] = "START_PLAY";
 	})(RoomAction || (RoomAction = {}));
 	var RoomAction;
 	(function (RoomAction) {
@@ -2761,12 +3058,12 @@ module.exports =
 	    }
 	    RoomAction.startPlay = startPlay;
 	})(RoomAction || (RoomAction = {}));
-	exports.__esModule = true;
-	exports["default"] = RoomAction;
+	Object.defineProperty(exports, "__esModule", { value: true });
+	exports.default = RoomAction;
 
 
 /***/ },
-/* 45 */
+/* 22 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -2782,12 +3079,12 @@ module.exports =
 	    }
 	    RoomStatus.isWaitingPlayers = isWaitingPlayers;
 	})(RoomStatus || (RoomStatus = {}));
-	exports.__esModule = true;
-	exports["default"] = RoomStatus;
+	Object.defineProperty(exports, "__esModule", { value: true });
+	exports.default = RoomStatus;
 
 
 /***/ },
-/* 46 */
+/* 23 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -2796,206 +3093,445 @@ module.exports =
 
 
 /***/ },
-/* 47 */,
-/* 48 */
+/* 24 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	var States_1 = __webpack_require__(19);
+	var GameAction_1 = __webpack_require__(25);
+	var GameStatus_1 = __webpack_require__(26);
+	var _ = __webpack_require__(20);
+	var GameStatusReducer_1 = __webpack_require__(27);
+	function GameReducer(state, action) {
+	    if (state === void 0) { state = States_1.InitialGameState; }
+	    switch (action.type) {
+	        case GameAction_1.default.CREATE_GAME:
+	            return States_1.getNewState(States_1.InitialGameState, ['time_create', 'time_last_update', 'time_last_update_players'], {
+	                status: GameStatus_1.GameStatus.START_THE_GAME,
+	                players: action.payload.players
+	            });
+	        case GameAction_1.default.NEXT_GAME_STEP:
+	            return GameStatusReducer_1.default(state, action);
+	        case GameAction_1.default.VOTE:
+	            if (state.votes.length && !~_.pluck(state.votes, 'who_token').indexOf(action.payload.who_token)) {
+	                return state;
+	            }
+	            return States_1.getNewState(state, [], {
+	                votes: state.votes.map(function (vote) {
+	                    return action.payload.who_token === vote.who_token ? _.extend({ for_whom_token: action.payload.for_whom_token }, vote) : vote;
+	                })
+	            });
+	        default:
+	            return state;
+	    }
+	}
+	Object.defineProperty(exports, "__esModule", { value: true });
+	exports.default = GameReducer;
+
+
+/***/ },
+/* 25 */
 /***/ function(module, exports) {
 
-	/*!
-	 * cookie
-	 * Copyright(c) 2012-2014 Roman Shtylman
-	 * Copyright(c) 2015 Douglas Christopher Wilson
-	 * MIT Licensed
-	 */
-
-	'use strict';
-
-	/**
-	 * Module exports.
-	 * @public
-	 */
-
-	exports.parse = parse;
-	exports.serialize = serialize;
-
-	/**
-	 * Module variables.
-	 * @private
-	 */
-
-	var decode = decodeURIComponent;
-	var encode = encodeURIComponent;
-	var pairSplitRegExp = /; */;
-
-	/**
-	 * RegExp to match field-content in RFC 7230 sec 3.2
-	 *
-	 * field-content = field-vchar [ 1*( SP / HTAB ) field-vchar ]
-	 * field-vchar   = VCHAR / obs-text
-	 * obs-text      = %x80-FF
-	 */
-
-	var fieldContentRegExp = /^[\u0009\u0020-\u007e\u0080-\u00ff]+$/;
-
-	/**
-	 * Parse a cookie header.
-	 *
-	 * Parse the given cookie header string into an object
-	 * The object has the various cookies as keys(names) => values
-	 *
-	 * @param {string} str
-	 * @param {object} [options]
-	 * @return {object}
-	 * @public
-	 */
-
-	function parse(str, options) {
-	  if (typeof str !== 'string') {
-	    throw new TypeError('argument str must be a string');
-	  }
-
-	  var obj = {}
-	  var opt = options || {};
-	  var pairs = str.split(pairSplitRegExp);
-	  var dec = opt.decode || decode;
-
-	  for (var i = 0; i < pairs.length; i++) {
-	    var pair = pairs[i];
-	    var eq_idx = pair.indexOf('=');
-
-	    // skip things that don't look like key=value
-	    if (eq_idx < 0) {
-	      continue;
+	"use strict";
+	var GameAction;
+	(function (GameAction) {
+	    GameAction[GameAction["CREATE_GAME"] = 0] = "CREATE_GAME";
+	    GameAction[GameAction["NEXT_GAME_STEP"] = 1] = "NEXT_GAME_STEP";
+	    GameAction[GameAction["VOTE"] = 2] = "VOTE";
+	})(GameAction || (GameAction = {}));
+	var GameAction;
+	(function (GameAction) {
+	    function createGame(players) {
+	        return {
+	            type: GameAction.CREATE_GAME,
+	            payload: { players: players }
+	        };
 	    }
-
-	    var key = pair.substr(0, eq_idx).trim()
-	    var val = pair.substr(++eq_idx, pair.length).trim();
-
-	    // quoted values
-	    if ('"' == val[0]) {
-	      val = val.slice(1, -1);
+	    GameAction.createGame = createGame;
+	    function nextGameStep(status) {
+	        return {
+	            type: GameAction.NEXT_GAME_STEP,
+	            payload: { status: status }
+	        };
 	    }
-
-	    // only assign once
-	    if (undefined == obj[key]) {
-	      obj[key] = tryDecode(val, dec);
+	    GameAction.nextGameStep = nextGameStep;
+	    function vote(who_token, for_whom_token) {
+	        return {
+	            type: GameAction.VOTE,
+	            payload: { who_token: who_token, for_whom_token: for_whom_token }
+	        };
 	    }
-	  }
+	    GameAction.vote = vote;
+	})(GameAction || (GameAction = {}));
+	Object.defineProperty(exports, "__esModule", { value: true });
+	exports.default = GameAction;
 
-	  return obj;
+
+/***/ },
+/* 26 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	var Roles_1 = __webpack_require__(2);
+	var _ = __webpack_require__(20);
+	(function (GameStatus) {
+	    GameStatus[GameStatus["START_THE_GAME"] = 0] = "START_THE_GAME";
+	    GameStatus[GameStatus["DAY_AFTER_NIGHT"] = 1] = "DAY_AFTER_NIGHT";
+	    GameStatus[GameStatus["DAY_BEFORE_NIGHT"] = 2] = "DAY_BEFORE_NIGHT";
+	    GameStatus[GameStatus["WAKE_UP_INHABITANT"] = 3] = "WAKE_UP_INHABITANT";
+	    GameStatus[GameStatus["VOTE_INHABITANT"] = 4] = "VOTE_INHABITANT";
+	    GameStatus[GameStatus["FALL_ASLEEP_INHABITANT"] = 5] = "FALL_ASLEEP_INHABITANT";
+	    GameStatus[GameStatus["WAKE_UP_MAFIA"] = 6] = "WAKE_UP_MAFIA";
+	    GameStatus[GameStatus["VOTE_MAFIA"] = 7] = "VOTE_MAFIA";
+	    GameStatus[GameStatus["FALL_ASLEEP_MAFIA"] = 8] = "FALL_ASLEEP_MAFIA";
+	    GameStatus[GameStatus["WAKE_UP_DOCTOR"] = 9] = "WAKE_UP_DOCTOR";
+	    GameStatus[GameStatus["VOTE_DOCTOR"] = 10] = "VOTE_DOCTOR";
+	    GameStatus[GameStatus["FALL_ASLEEP_DOCTOR"] = 11] = "FALL_ASLEEP_DOCTOR";
+	    GameStatus[GameStatus["WAKE_UP_WHORE"] = 12] = "WAKE_UP_WHORE";
+	    GameStatus[GameStatus["VOTE_WHORE"] = 13] = "VOTE_WHORE";
+	    GameStatus[GameStatus["FALL_ASLEEP_WHORE"] = 14] = "FALL_ASLEEP_WHORE";
+	    GameStatus[GameStatus["WAKE_UP_COMMISSAR"] = 15] = "WAKE_UP_COMMISSAR";
+	    GameStatus[GameStatus["VOTE_COMMISSAR"] = 16] = "VOTE_COMMISSAR";
+	    GameStatus[GameStatus["FALL_ASLEEP_COMMISSAR"] = 17] = "FALL_ASLEEP_COMMISSAR";
+	})(exports.GameStatus || (exports.GameStatus = {}));
+	var GameStatus = exports.GameStatus;
+	var GameStatusHelpers;
+	(function (GameStatusHelpers) {
+	    function getActiveRole(game_status) {
+	        switch (game_status) {
+	            case GameStatus.VOTE_MAFIA:
+	                return [Roles_1.default.MAFIA];
+	            case GameStatus.VOTE_DOCTOR:
+	                return [Roles_1.default.DOCTOR];
+	            case GameStatus.VOTE_WHORE:
+	                return [Roles_1.default.WHORE];
+	            case GameStatus.VOTE_COMMISSAR:
+	                return [Roles_1.default.COMMISSAR];
+	            case GameStatus.VOTE_INHABITANT:
+	                return [Roles_1.default.MAFIA, Roles_1.default.DOCTOR, Roles_1.default.INHABITANT, Roles_1.default.WHORE, Roles_1.default.COMMISSAR];
+	            default:
+	                return null;
+	        }
+	    }
+	    GameStatusHelpers.getActiveRole = getActiveRole;
+	    function getNextStatus(state) {
+	        switch (state.status) {
+	            case GameStatus.START_THE_GAME:
+	            case GameStatus.DAY_BEFORE_NIGHT:
+	                return GameStatus.FALL_ASLEEP_INHABITANT;
+	            case GameStatus.WAKE_UP_INHABITANT:
+	                return GameStatus.DAY_AFTER_NIGHT;
+	            case GameStatus.DAY_AFTER_NIGHT:
+	                return GameStatus.VOTE_INHABITANT;
+	            case GameStatus.VOTE_INHABITANT:
+	                return GameStatus.DAY_BEFORE_NIGHT;
+	            case GameStatus.FALL_ASLEEP_INHABITANT:
+	                return GameStatus.WAKE_UP_MAFIA;
+	            case GameStatus.WAKE_UP_MAFIA:
+	                return GameStatus.VOTE_MAFIA;
+	            case GameStatus.VOTE_MAFIA:
+	                return GameStatus.FALL_ASLEEP_MAFIA;
+	            case GameStatus.WAKE_UP_DOCTOR:
+	                return GameStatus.VOTE_DOCTOR;
+	            case GameStatus.VOTE_DOCTOR:
+	                return GameStatus.FALL_ASLEEP_DOCTOR;
+	            case GameStatus.WAKE_UP_WHORE:
+	                return GameStatus.VOTE_WHORE;
+	            case GameStatus.VOTE_WHORE:
+	                return GameStatus.FALL_ASLEEP_WHORE;
+	            case GameStatus.WAKE_UP_COMMISSAR:
+	                return GameStatus.VOTE_COMMISSAR;
+	            case GameStatus.VOTE_COMMISSAR:
+	                return GameStatus.FALL_ASLEEP_COMMISSAR;
+	            case GameStatus.FALL_ASLEEP_COMMISSAR:
+	                return GameStatus.WAKE_UP_INHABITANT;
+	            case GameStatus.FALL_ASLEEP_MAFIA:
+	                if (_.findWhere(state.players, { role: Roles_1.default.DOCTOR })) {
+	                    return GameStatus.WAKE_UP_DOCTOR;
+	                }
+	                if (_.findWhere(state.players, { role: Roles_1.default.WHORE })) {
+	                    return GameStatus.WAKE_UP_WHORE;
+	                }
+	                if (_.findWhere(state.players, { role: Roles_1.default.COMMISSAR })) {
+	                    return GameStatus.WAKE_UP_COMMISSAR;
+	                }
+	                return GameStatus.WAKE_UP_INHABITANT;
+	            case GameStatus.FALL_ASLEEP_DOCTOR:
+	                if (_.findWhere(state.players, { role: Roles_1.default.WHORE })) {
+	                    return GameStatus.WAKE_UP_WHORE;
+	                }
+	                if (_.findWhere(state.players, { role: Roles_1.default.COMMISSAR })) {
+	                    return GameStatus.WAKE_UP_COMMISSAR;
+	                }
+	                return GameStatus.WAKE_UP_INHABITANT;
+	            case GameStatus.FALL_ASLEEP_WHORE:
+	                if (_.findWhere(state.players, { role: Roles_1.default.COMMISSAR })) {
+	                    return GameStatus.WAKE_UP_COMMISSAR;
+	                }
+	                return GameStatus.WAKE_UP_INHABITANT;
+	        }
+	    }
+	    GameStatusHelpers.getNextStatus = getNextStatus;
+	})(GameStatusHelpers = exports.GameStatusHelpers || (exports.GameStatusHelpers = {}));
+
+
+/***/ },
+/* 27 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	var States_1 = __webpack_require__(19);
+	var GameStatus_1 = __webpack_require__(26);
+	var Player_1 = __webpack_require__(28);
+	var _ = __webpack_require__(20);
+	var Roles_1 = __webpack_require__(2);
+	var helpers_1 = __webpack_require__(29);
+	function GameStatusReducer(state, action) {
+	    if (state === void 0) { state = States_1.InitialGameState; }
+	    var round_data = state.round_data || {};
+	    var players = state.players;
+	    var win_role;
+	    switch (action.payload.status) {
+	        case GameStatus_1.GameStatus.DAY_BEFORE_NIGHT:
+	            var execution = '';
+	            if (state.votes.length) {
+	                execution = helpers_1.getMaxRepeatValue(_.pluck(state.votes, 'for_whom_token'));
+	            }
+	            if (Player_1.Player.isEqualMafiaAndOthers(state.players, execution)) {
+	                win_role = Roles_1.default.MAFIA;
+	            }
+	            if (!Player_1.Player.hasMafia(state.players, execution)) {
+	                win_role = Roles_1.default.INHABITANT;
+	            }
+	            return States_1.getNewState(state, ['time_last_update', 'time_last_update_players'], {
+	                status: action.payload.status,
+	                round_data: { execution: execution },
+	                votes: [],
+	                vote_variants: [],
+	                win_role: win_role,
+	                active_roles: null
+	            });
+	        case GameStatus_1.GameStatus.DAY_AFTER_NIGHT:
+	            if (!_.isEmpty(round_data.killed)) {
+	                players = players.filter(function (player) { return !~round_data.killed.indexOf(player.token); });
+	            }
+	            if (Player_1.Player.isEqualMafiaAndOthers(players)) {
+	                win_role = Roles_1.default.MAFIA;
+	            }
+	            return States_1.getNewState(state, ['time_last_update'], {
+	                status: action.payload.status,
+	                players: players,
+	                win_role: win_role
+	            });
+	        case GameStatus_1.GameStatus.FALL_ASLEEP_INHABITANT:
+	            if (state.round_data && state.round_data.execution) {
+	                players = players.filter(function (player) { return player.token !== state.round_data.execution; });
+	            }
+	            return States_1.getNewState(state, ['time_last_update'], {
+	                status: action.payload.status,
+	                round_data: null,
+	                players: players,
+	                round_number: ++state.round_number
+	            });
+	        case GameStatus_1.GameStatus.WAKE_UP_INHABITANT:
+	            round_data = _.clone(state.round_data);
+	            round_data.killed = [];
+	            round_data.killed = round_data.killed.concat(round_data.mafia_target);
+	            var whore = _.findWhere(state.players, { role: Roles_1.default.WHORE });
+	            if (whore && whore.token === round_data.mafia_target) {
+	                round_data.killed = round_data.killed.concat(round_data.real_man);
+	            }
+	            if (round_data.mafia_target === round_data.real_man) {
+	                round_data.killed = [];
+	            }
+	            if (~round_data.killed.indexOf(round_data.healing)) {
+	                round_data.killed = _.without(round_data.killed, round_data.healing);
+	            }
+	            return States_1.getNewState(state, ['time_last_update', 'time_last_update_players'], {
+	                status: action.payload.status,
+	                round_data: round_data
+	            });
+	        case GameStatus_1.GameStatus.VOTE_COMMISSAR:
+	        case GameStatus_1.GameStatus.VOTE_MAFIA:
+	        case GameStatus_1.GameStatus.VOTE_INHABITANT:
+	        case GameStatus_1.GameStatus.VOTE_DOCTOR:
+	        case GameStatus_1.GameStatus.VOTE_WHORE:
+	            var active_roles_1 = GameStatus_1.GameStatusHelpers.getActiveRole(action.payload.status), vote_variants = state.players
+	                .filter(function (player) {
+	                if (GameStatus_1.GameStatus.VOTE_DOCTOR === action.payload.status) {
+	                    return state.prev_round_healing ? state.prev_round_healing !== player.token : true;
+	                }
+	                if (GameStatus_1.GameStatus.VOTE_INHABITANT === action.payload.status) {
+	                    return true;
+	                }
+	                return !~active_roles_1.indexOf(player.role);
+	            })
+	                .map(function (player) { return player.token; }), votes = state.players
+	                .filter(function (player) { return !!~active_roles_1.indexOf(player.role); })
+	                .map(function (player) { return ({ who_token: player.token }); });
+	            return States_1.getNewState(state, ['time_last_update', 'time_last_update_players'], {
+	                status: action.payload.status,
+	                active_roles: active_roles_1,
+	                vote_variants: vote_variants,
+	                votes: votes
+	            });
+	        case GameStatus_1.GameStatus.FALL_ASLEEP_MAFIA:
+	        case GameStatus_1.GameStatus.FALL_ASLEEP_DOCTOR:
+	        case GameStatus_1.GameStatus.FALL_ASLEEP_WHORE:
+	            var vote_result = helpers_1.getMaxRepeatValue(_.pluck(state.votes, 'for_whom_token')), prev_round_healing = void 0;
+	            switch (action.payload.status) {
+	                case GameStatus_1.GameStatus.FALL_ASLEEP_DOCTOR:
+	                    round_data.healing = prev_round_healing = vote_result;
+	                    break;
+	                case GameStatus_1.GameStatus.FALL_ASLEEP_MAFIA:
+	                    round_data.mafia_target = vote_result;
+	                    break;
+	                case GameStatus_1.GameStatus.FALL_ASLEEP_WHORE:
+	                    round_data.real_man = vote_result;
+	                    break;
+	            }
+	            return States_1.getNewState(state, ['time_last_update'], {
+	                status: action.payload.status,
+	                round_data: round_data,
+	                prev_round_healing: prev_round_healing,
+	                votes: [],
+	                vote_variants: [],
+	                active_roles: null
+	            });
+	        case GameStatus_1.GameStatus.FALL_ASLEEP_COMMISSAR:
+	            return States_1.getNewState(state, ['time_last_update'], {
+	                status: action.payload.status,
+	                votes: [],
+	                vote_variants: [],
+	                active_roles: null
+	            });
+	        case GameStatus_1.GameStatus.WAKE_UP_MAFIA:
+	        case GameStatus_1.GameStatus.WAKE_UP_DOCTOR:
+	        case GameStatus_1.GameStatus.WAKE_UP_WHORE:
+	        case GameStatus_1.GameStatus.WAKE_UP_COMMISSAR:
+	            return States_1.getNewState(state, ['time_last_update'], {
+	                status: action.payload.status
+	            });
+	        default:
+	            return state;
+	    }
 	}
+	Object.defineProperty(exports, "__esModule", { value: true });
+	exports.default = GameStatusReducer;
 
-	/**
-	 * Serialize data into a cookie header.
-	 *
-	 * Serialize the a name value pair into a cookie string suitable for
-	 * http headers. An optional options object specified cookie parameters.
-	 *
-	 * serialize('foo', 'bar', { httpOnly: true })
-	 *   => "foo=bar; httpOnly"
-	 *
-	 * @param {string} name
-	 * @param {string} val
-	 * @param {object} [options]
-	 * @return {string}
-	 * @public
-	 */
 
-	function serialize(name, val, options) {
-	  var opt = options || {};
-	  var enc = opt.encode || encode;
+/***/ },
+/* 28 */
+/***/ function(module, exports, __webpack_require__) {
 
-	  if (typeof enc !== 'function') {
-	    throw new TypeError('option encode is invalid');
-	  }
-
-	  if (!fieldContentRegExp.test(name)) {
-	    throw new TypeError('argument name is invalid');
-	  }
-
-	  var value = enc(val);
-
-	  if (value && !fieldContentRegExp.test(value)) {
-	    throw new TypeError('argument val is invalid');
-	  }
-
-	  var str = name + '=' + value;
-
-	  if (null != opt.maxAge) {
-	    var maxAge = opt.maxAge - 0;
-	    if (isNaN(maxAge)) throw new Error('maxAge should be a Number');
-	    str += '; Max-Age=' + Math.floor(maxAge);
-	  }
-
-	  if (opt.domain) {
-	    if (!fieldContentRegExp.test(opt.domain)) {
-	      throw new TypeError('option domain is invalid');
+	"use strict";
+	var Roles_1 = __webpack_require__(2);
+	var _ = __webpack_require__(20);
+	var GameEnvironment_1 = __webpack_require__(23);
+	var Player;
+	(function (Player) {
+	    Player.Avatars = {
+	        path: '/public/img/avatars/',
+	        variants: [
+	            'lady.png',
+	            'black.png'
+	        ]
+	    };
+	    function RolesForPlayers(players) {
+	        var steps = Math.floor((players.length - GameEnvironment_1.MIN_PLAYERS) / GameEnvironment_1.STEP_CHANGE_ROLES) + 1, game_players = _.shuffle(players).map(function (player) { return _.extend({ role: Roles_1.default.INHABITANT }, player); }), flag_commissar = false, index = 0;
+	        game_players[index++].role = Roles_1.default.DOCTOR;
+	        game_players[index++].role = Roles_1.default.WHORE;
+	        while (steps--) {
+	            game_players[index++].role = Roles_1.default.MAFIA;
+	            if (steps % 2 !== 0) {
+	                if (!flag_commissar) {
+	                    game_players[index++].role = Roles_1.default.COMMISSAR;
+	                    flag_commissar = true;
+	                }
+	            }
+	        }
+	        return game_players;
 	    }
-
-	    str += '; Domain=' + opt.domain;
-	  }
-
-	  if (opt.path) {
-	    if (!fieldContentRegExp.test(opt.path)) {
-	      throw new TypeError('option path is invalid');
+	    Player.RolesForPlayers = RolesForPlayers;
+	    function isEqualMafiaAndOthers(players, remove_in_future_token) {
+	        if (players === void 0) { players = []; }
+	        var mafia_count = 0, others_count = 0;
+	        players.forEach(function (player) {
+	            if (remove_in_future_token === player.token)
+	                return;
+	            if (player.role === Roles_1.default.MAFIA) {
+	                mafia_count++;
+	            }
+	            else {
+	                others_count++;
+	            }
+	        });
+	        return players.length && mafia_count === others_count;
 	    }
-
-	    str += '; Path=' + opt.path;
-	  }
-
-	  if (opt.expires) {
-	    if (typeof opt.expires.toUTCString !== 'function') {
-	      throw new TypeError('option expires is invalid');
+	    Player.isEqualMafiaAndOthers = isEqualMafiaAndOthers;
+	    function hasMafia(players, remove_in_future_token) {
+	        if (players === void 0) { players = []; }
+	        var mafia_count = 0;
+	        players.forEach(function (player) {
+	            if (remove_in_future_token === player.token)
+	                return;
+	            if (player.role === Roles_1.default.MAFIA) {
+	                mafia_count++;
+	            }
+	        });
+	        return players.length && !!mafia_count;
 	    }
+	    Player.hasMafia = hasMafia;
+	})(Player = exports.Player || (exports.Player = {}));
 
-	    str += '; Expires=' + opt.expires.toUTCString();
-	  }
 
-	  if (opt.httpOnly) {
-	    str += '; HttpOnly';
-	  }
+/***/ },
+/* 29 */
+/***/ function(module, exports, __webpack_require__) {
 
-	  if (opt.secure) {
-	    str += '; Secure';
-	  }
-
-	  if (opt.sameSite) {
-	    var sameSite = typeof opt.sameSite === 'string'
-	      ? opt.sameSite.toLowerCase() : opt.sameSite;
-
-	    switch (sameSite) {
-	      case true:
-	        str += '; SameSite=Strict';
-	        break;
-	      case 'lax':
-	        str += '; SameSite=Lax';
-	        break;
-	      case 'strict':
-	        str += '; SameSite=Strict';
-	        break;
-	      default:
-	        throw new TypeError('option sameSite is invalid');
-	    }
-	  }
-
-	  return str;
+	"use strict";
+	var _ = __webpack_require__(20);
+	function getMaxRepeatValue(arr) {
+	    var obj = {
+	        max: {
+	            count: 0,
+	            value: ''
+	        }
+	    };
+	    _.shuffle(arr).forEach(function (val) {
+	        obj[val] = obj[val] || 0;
+	        obj[val]++;
+	        if (obj[val] > obj.max.count) {
+	            obj.max.count = obj[val];
+	            obj.max.value = val;
+	        }
+	    });
+	    return obj.max.value;
 	}
-
-	/**
-	 * Try decoding a string using a decoding function.
-	 *
-	 * @param {string} str
-	 * @param {function} decode
-	 * @private
-	 */
-
-	function tryDecode(str, decode) {
-	  try {
-	    return decode(str);
-	  } catch (e) {
-	    return str;
-	  }
+	exports.getMaxRepeatValue = getMaxRepeatValue;
+	function getRandomString(len) {
+	    var str = '123456789qwertyuiopasdfghjklzxcvbnm', arr_symbols = str.split(''), random_str = '';
+	    while (len--) {
+	        random_str += arr_symbols[Math.floor(Math.random() * str.length)];
+	    }
+	    return random_str;
 	}
+	exports.getRandomString = getRandomString;
 
+
+/***/ },
+/* 30 */
+/***/ function(module, exports) {
+
+	module.exports = {
+	    web_socket_path : {
+	        room: '/room',
+	        players: '/players'
+	    },
+	    web_socket_port : 3002,
+	    domain: 'localhost'
+	};
 
 /***/ }
 /******/ ]);

@@ -67,89 +67,89 @@
 	            game_players = Player_1.Player.RolesForPlayers(players);
 	            roles_array = _.pluck(game_players, 'role');
 	            count_roles = _.countBy(roles_array, _.identity);
-	            count_roles[Roles_1["default"].COMMISSAR] = count_roles[Roles_1["default"].COMMISSAR] || 0;
-	            count_roles[Roles_1["default"].WHORE] = count_roles[Roles_1["default"].WHORE] || 0;
+	            count_roles[Roles_1.default.COMMISSAR] = count_roles[Roles_1.default.COMMISSAR] || 0;
+	            count_roles[Roles_1.default.WHORE] = count_roles[Roles_1.default.WHORE] || 0;
 	            mafia_count = Math.floor((count_players - GameEnvironment_1.MIN_PLAYERS) / GameEnvironment_1.STEP_CHANGE_ROLES) + 1;
 	            doctor_count = 1;
 	            whore_count = 1;
 	            commissar_count = count_players >= GameEnvironment_1.MIN_PLAYERS + GameEnvironment_1.STEP_CHANGE_ROLES ? 1 : 0;
-	            expect(count_roles[Roles_1["default"].MAFIA]).toBe(mafia_count);
-	            expect(count_roles[Roles_1["default"].DOCTOR]).toBe(doctor_count);
-	            expect(count_roles[Roles_1["default"].COMMISSAR]).toBe(commissar_count);
-	            expect(count_roles[Roles_1["default"].WHORE]).toBe(whore_count);
-	            expect(count_roles[Roles_1["default"].INHABITANT]).toBe(count_players - mafia_count - doctor_count - commissar_count - whore_count);
+	            expect(count_roles[Roles_1.default.MAFIA]).toBe(mafia_count);
+	            expect(count_roles[Roles_1.default.DOCTOR]).toBe(doctor_count);
+	            expect(count_roles[Roles_1.default.COMMISSAR]).toBe(commissar_count);
+	            expect(count_roles[Roles_1.default.WHORE]).toBe(whore_count);
+	            expect(count_roles[Roles_1.default.INHABITANT]).toBe(count_players - mafia_count - doctor_count - commissar_count - whore_count);
 	        });
 	    });
 	    it('isEqualMafiaAndOthers simple', function () {
 	        var players = [
-	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
-	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
-	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].MAFIA }),
-	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].MAFIA }),
-	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT })
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1.default.INHABITANT }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1.default.INHABITANT }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1.default.MAFIA }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1.default.MAFIA }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1.default.INHABITANT })
 	        ];
 	        expect(isEqualMafiaAndOthers(players)).toBeFalsy();
 	        players = [
-	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
-	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].MAFIA }),
-	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].MAFIA }),
-	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].DOCTOR })
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1.default.INHABITANT }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1.default.MAFIA }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1.default.MAFIA }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1.default.DOCTOR })
 	        ];
 	        expect(isEqualMafiaAndOthers(players)).toBeTruthy();
 	    });
 	    it('isEqualMafiaAndOthers with remove parametr', function () {
 	        var token_1 = '23423', players = [
-	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
-	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
-	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].MAFIA }),
-	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT, token: token_1 }),
-	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT })
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1.default.INHABITANT }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1.default.INHABITANT }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1.default.MAFIA }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1.default.INHABITANT, token: token_1 }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1.default.INHABITANT })
 	        ];
 	        expect(isEqualMafiaAndOthers(players, token_1)).toBeFalsy();
 	        expect(isEqualMafiaAndOthers(players)).toBeFalsy();
 	        players = [
-	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
-	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].MAFIA }),
-	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].MAFIA }),
-	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT, token: token_1 }),
-	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].DOCTOR })
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1.default.INHABITANT }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1.default.MAFIA }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1.default.MAFIA }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1.default.INHABITANT, token: token_1 }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1.default.DOCTOR })
 	        ];
 	        expect(isEqualMafiaAndOthers(players)).toBeFalsy();
 	        expect(isEqualMafiaAndOthers(players, token_1)).toBeTruthy();
 	    });
 	    it('hasMafia simple', function () {
 	        var players = [
-	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
-	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
-	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].COMMISSAR }),
-	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].DOCTOR }),
-	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT })
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1.default.INHABITANT }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1.default.INHABITANT }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1.default.COMMISSAR }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1.default.DOCTOR }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1.default.INHABITANT })
 	        ];
 	        expect(hasMafia(players)).toBeFalsy();
 	        players = [
-	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
-	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].MAFIA }),
-	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].MAFIA }),
-	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].DOCTOR })
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1.default.INHABITANT }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1.default.MAFIA }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1.default.MAFIA }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1.default.DOCTOR })
 	        ];
 	        expect(hasMafia(players)).toBeTruthy();
 	    });
 	    it('hasMafia with remove parametr', function () {
 	        var token_1 = '23423', players = [
-	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
-	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
-	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].MAFIA }),
-	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT, token: token_1 }),
-	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT })
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1.default.INHABITANT }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1.default.INHABITANT }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1.default.MAFIA }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1.default.INHABITANT, token: token_1 }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1.default.INHABITANT })
 	        ];
 	        expect(hasMafia(players, token_1)).toBeTruthy();
 	        expect(hasMafia(players)).toBeTruthy();
 	        players = [
-	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
-	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
-	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].INHABITANT }),
-	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].MAFIA, token: token_1 }),
-	            PlayersMocks_1.getGamePlayer({ role: Roles_1["default"].DOCTOR })
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1.default.INHABITANT }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1.default.INHABITANT }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1.default.INHABITANT }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1.default.MAFIA, token: token_1 }),
+	            PlayersMocks_1.getGamePlayer({ role: Roles_1.default.DOCTOR })
 	        ];
 	        expect(hasMafia(players)).toBeTruthy();
 	        expect(hasMafia(players, token_1)).toBeFalsy();
@@ -1728,8 +1728,34 @@
 	    Roles[Roles["COMMISSAR"] = 3] = "COMMISSAR";
 	    Roles[Roles["WHORE"] = 4] = "WHORE";
 	})(Roles || (Roles = {}));
-	exports.__esModule = true;
-	exports["default"] = Roles;
+	exports.RolesMapping = {};
+	exports.RolesMapping[Roles.INHABITANT] = {
+	    title: 'Мирные жители',
+	    description: 'Играют только “днем”, могут в это время суток, с помощью голосования, казнить одного из игроков. До конца игры не знают, кто из игроков за кого играет.',
+	    card_img: 'inhabitant.png'
+	};
+	exports.RolesMapping[Roles.MAFIA] = {
+	    title: 'Мафия',
+	    description: 'Днем прикидываются мирными жителями, ночью просыпаются и убивают мирных жителей. Все Мафиози знают друг друга.',
+	    card_img: 'mafia.png'
+	};
+	exports.RolesMapping[Roles.DOCTOR] = {
+	    title: 'Доктор',
+	    description: 'Играет за жителей. Игрок, получивший эту роль, может спасти ночью от смерти одного из игроков.',
+	    card_img: 'doctor.png'
+	};
+	exports.RolesMapping[Roles.COMMISSAR] = {
+	    title: 'Комиссар',
+	    description: 'Играет за жителей. Просыпаясь ночью и выбрав одного игрока, он получает ответ на вопрос, является ли указанный человек мафиози.',
+	    card_img: 'commissar.png'
+	};
+	exports.RolesMapping[Roles.WHORE] = {
+	    title: 'Путана',
+	    description: 'Играет за жителей. Ночью путана выбирает одного из игроков, которого она спасает от смерти. Отличие только в том, что если убивают доктора, то пациент остается жив. Если же представительница древнейшей профессии сама становится ночной жертвой мафии, то вместе с ней погибает и ее клиент.',
+	    card_img: 'whore.png'
+	};
+	Object.defineProperty(exports, "__esModule", { value: true });
+	exports.default = Roles;
 
 
 /***/ },
@@ -1751,14 +1777,14 @@
 	        ]
 	    };
 	    function RolesForPlayers(players) {
-	        var steps = Math.floor((players.length - GameEnvironment_1.MIN_PLAYERS) / GameEnvironment_1.STEP_CHANGE_ROLES) + 1, game_players = _.shuffle(players).map(function (player) { return _.extend({ role: Roles_1["default"].INHABITANT }, player); }), flag_commissar = false, index = 0;
-	        game_players[index++].role = Roles_1["default"].DOCTOR;
-	        game_players[index++].role = Roles_1["default"].WHORE;
+	        var steps = Math.floor((players.length - GameEnvironment_1.MIN_PLAYERS) / GameEnvironment_1.STEP_CHANGE_ROLES) + 1, game_players = _.shuffle(players).map(function (player) { return _.extend({ role: Roles_1.default.INHABITANT }, player); }), flag_commissar = false, index = 0;
+	        game_players[index++].role = Roles_1.default.DOCTOR;
+	        game_players[index++].role = Roles_1.default.WHORE;
 	        while (steps--) {
-	            game_players[index++].role = Roles_1["default"].MAFIA;
+	            game_players[index++].role = Roles_1.default.MAFIA;
 	            if (steps % 2 !== 0) {
 	                if (!flag_commissar) {
-	                    game_players[index++].role = Roles_1["default"].COMMISSAR;
+	                    game_players[index++].role = Roles_1.default.COMMISSAR;
 	                    flag_commissar = true;
 	                }
 	            }
@@ -1772,7 +1798,7 @@
 	        players.forEach(function (player) {
 	            if (remove_in_future_token === player.token)
 	                return;
-	            if (player.role === Roles_1["default"].MAFIA) {
+	            if (player.role === Roles_1.default.MAFIA) {
 	                mafia_count++;
 	            }
 	            else {
@@ -1788,7 +1814,7 @@
 	        players.forEach(function (player) {
 	            if (remove_in_future_token === player.token)
 	                return;
-	            if (player.role === Roles_1["default"].MAFIA) {
+	            if (player.role === Roles_1.default.MAFIA) {
 	                mafia_count++;
 	            }
 	        });
@@ -1823,7 +1849,7 @@
 	}
 	exports.getPlayer = getPlayer;
 	function getGamePlayer(_a) {
-	    var _b = _a === void 0 ? {} : _a, _c = _b.name, name = _c === void 0 ? exports.INITIAL_NAME : _c, _d = _b.avatar, avatar = _d === void 0 ? exports.INITIAL_AVATAR : _d, _e = _b.token, token = _e === void 0 ? exports.INITIAL_TOKEN : _e, _f = _b.role, role = _f === void 0 ? Roles_1["default"].INHABITANT : _f;
+	    var _b = _a === void 0 ? {} : _a, _c = _b.name, name = _c === void 0 ? exports.INITIAL_NAME : _c, _d = _b.avatar, avatar = _d === void 0 ? exports.INITIAL_AVATAR : _d, _e = _b.token, token = _e === void 0 ? exports.INITIAL_TOKEN : _e, _f = _b.role, role = _f === void 0 ? Roles_1.default.INHABITANT : _f;
 	    return { name: name, avatar: avatar, token: token, role: role };
 	}
 	exports.getGamePlayer = getGamePlayer;

@@ -27,3 +27,17 @@ interface MaxRepeatObject {
         value: string;
     }
 }
+
+
+
+export function getRandomString(len: number) {
+    let str: string = '123456789qwertyuiopasdfghjklzxcvbnm',
+        arr_symbols = str.split(''),
+        random_str = '';
+
+    while(len--){
+        random_str += arr_symbols[Math.floor(Math.random() * str.length)];
+    }
+
+    return random_str;
+}

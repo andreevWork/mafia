@@ -1,7 +1,7 @@
 module.exports = {
-    entry: './src/websocket/WebSocketServer.ts',
+    entry: './src/server/GameServer.ts',
     output: {
-        filename: "./src/websocket/WebSocketServer.js",
+        filename: "./src/server/GameServer.js",
         libraryTarget: 'commonjs2'
     },
 

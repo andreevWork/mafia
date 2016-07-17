@@ -1,10 +1,11 @@
 import {Player} from "../entity/Player";
 import {IAction} from "~redux/redux";
 
+// Был конфликт между action-оми было решено присвоить большие значния enum
 enum RoomAction {
-    CREATE_ROOM,
-    ADD_PLAYER,
-    START_PLAY
+    CREATE_ROOM = 50,
+    ADD_PLAYER = 51,
+    START_PLAY = 52
 }
 
 export interface IRoomAction extends IAction {

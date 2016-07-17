@@ -10,7 +10,7 @@ import {getGameStateAfterVote} from "../mocks/GameStateMocks";
 
 
 describe('GameReducer', () => {
-    let state: GameState<GameStatus>,
+    let state: GameState,
         now: number;
 
     beforeEach(() => {

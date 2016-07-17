@@ -15,7 +15,7 @@ describe('GameStatus', () => {
     });
 
     describe('getNextStatus', () => {
-        let state: GameState<GameStatus>;
+        let state: GameState;
 
         it('при самом начальном статусе игры, следующий статус, начало первой ночи, то есть город засыпает', () => {
             state = getNewState(InitialGameState, [], {status: GameStatus.START_THE_GAME});
