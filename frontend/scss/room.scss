@@ -1,25 +1,67 @@
 @import "common/variable.scss";
 @import "common/mixins.scss";
 
+.room-container {
+  min-height: 100vh;
+  padding-bottom: 5vh;
+  background: rgba(darken($main_color, 15%), $main_opacity);
 
-.room-header {
-  height: 20vh;
-}
-
-.room-content {
-  display: flex;
-  flex-flow: row wrap;
-  justify-content: space-around;
-
-  &__public-url {
-    font-size: 3em;
-    width: 100%;
-    text-align: center;
-    height: 10vh;
+  @include phone {
+    font-size:11px;
   }
 
-  &__players {
-    font-size: 1.5em;
-    width: 33%;
+  .room-header {
+    @include  header;
+  }
+
+  .room-content {
+
+    &__button-block {
+      text-align: center;
+      height: 10vh;
+      margin-top: 5vh;
+    }
+
+    &__public-url {
+      font-size: 2.5em;
+      width: 100%;
+      text-align: center;
+      height: 30vh;
+      padding: 1vh 10vw;
+      line-height: 1.5em;
+
+      @include tablet {
+        height: 20vh;
+      }
+
+      &-item {
+        color: $brand_color;
+      }
+    }
+
+    &__players {
+      width: $width_block;
+      margin-left: $margin_left_block;
+      display: flex;
+      flex-flow: row wrap;
+      justify-content: space-around;
+
+      &-header {
+        font-size: 2.3em;
+        width: 100%;
+        margin-bottom: 50px;
+      }
+
+      &-item {
+        font-size: 2em;
+        width: 33%;
+        font-weight:bold;
+        margin-bottom: 50px;
+
+        @include tablet {
+          width: 90%;
+        }
+      }
+    }
   }
 }

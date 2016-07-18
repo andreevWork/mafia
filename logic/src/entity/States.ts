@@ -35,6 +35,17 @@ export interface StateMainClient {
     game: GameMainClientState,
 }
 
+export interface IDataObjectPlayerClient {
+    role: Roles;
+}
+
+export interface StatePlayerClient {
+    is_wait: boolean;
+    data?: IDataObjectPlayerClient;
+}
+
+
+
 export interface RoomState extends BaseState<RoomStatus> {
     players: Array<Player>;
     is_ready: boolean;

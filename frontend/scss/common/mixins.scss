@@ -24,6 +24,23 @@
   }
 }
 
+@mixin header {
+  height: 10vh;
+  padding-top: 2vh;
+  font-size: 0.8em;
+  font-weight: bold;
+
+  * {
+    margin-right: 50px;
+    float: right;
+    letter-spacing: 1px;
+
+    @include phone {
+      margin-right: 20px;
+    }
+  }
+}
+
 @mixin nicetext {
   text-shadow: 0 1px 0 $text_color,
     0 2px 0 #c9c9c9,

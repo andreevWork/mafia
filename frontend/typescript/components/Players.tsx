@@ -8,7 +8,8 @@ export interface IPlayersProps {
 export default class Players extends React.Component<IPlayersProps, void> {
     render() {
         return <div className="room-content__players">
-            {this.props.players.map(player => player.name)}
+            <div className="room-content__players-header">Игроки в комнате:</div>
+            {this.props.players.map(player => <div className="room-content__players-item">{player.name}</div>)}
         </div>
     }
 }

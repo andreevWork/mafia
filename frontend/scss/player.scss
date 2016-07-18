@@ -1,0 +1,97 @@
+@import "common/variable.scss";
+@import "common/mixins.scss";
+
+.player-container {
+  min-height: 100vh;
+  padding-bottom: 5vh;
+  display: flex;
+  flex-flow: row wrap;
+  justify-content: space-around;
+  align-content: space-around;
+  background: rgba(darken($main_color, 7%), $main_opacity);
+
+  &__wait {
+    background: rgba(darken($main_color, 25%), $main_opacity);
+  }
+
+  &__card-block {
+    display: flex;
+    align-items: center;
+    text-align: center;
+  }
+
+  &__login {
+    background: rgba(darken($main_color, 13%), $main_opacity);
+    font-size: 1.2em;
+    text-align: center;
+    margin: auto;
+    position: relative;
+    border: none;
+
+    input {
+
+    }
+
+    input ~ label {
+      position: absolute;
+      top: -3em;
+      display: block;
+      border-radius: 3px;
+      padding: 0.5em;
+      font-size: 0.8em;
+      color: $text_color;
+      background-color: $brand_color;
+      pointer-events: none;
+      text-transform: initial;
+      z-index: 2;
+      opacity: 0;
+      transition: opacity 0.25s ease 0s;
+
+      &::before {
+        position: absolute;
+        display: inline-block;
+        content: "";
+        width: 10px;
+        height: 10px;
+        background: $brand_color;
+        transform: rotate(45deg);
+        z-index: 1;
+        bottom: -5px;
+        left: 10px;
+      }
+    }
+
+    input:focus ~ label {
+      opacity: 0.8;
+      transition: opacity 0.5s ease 1s;
+    }
+
+    input {
+      transition: all 0.5s ease;
+      padding: 0.8em;
+      font-size: inherit;
+      border-radius: 3px;
+      width: 100%;
+
+      background-image: url($body_bg);
+      border: 2px solid $brand_color;
+      color: $text_color;
+
+      &:focus {
+        border-color: $text_color;
+        background-color: $text_color;
+      }
+    }
+
+    input:focus {
+      position: relative;
+      outline: none;
+    }
+  }
+
+  &__wait-text {
+    font-size: 1.7em;
+    text-align: center;
+    margin: auto;
+  }
+}

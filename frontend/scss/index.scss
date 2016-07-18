@@ -1,8 +1,6 @@
 @import "common/variable.scss";
 @import "common/mixins.scss";
 
-$margin_left_block: 5%;
-$width_block: 90%;
 
 .landing-block {
   min-height: 100vh;
@@ -30,20 +28,7 @@ $width_block: 90%;
   }
 
   &__nav {
-    height: 10vh;
-    padding-top: 2vh;
-    font-size: 0.8em;
-    font-weight: bold;
-
-    * {
-      margin-right: 50px;
-      float: right;
-      letter-spacing: 1px;
-
-      @include phone {
-        margin-right: 20px;
-      }
-    }
+    @include  header;
   }
 
   &__text {

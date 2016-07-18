@@ -5,7 +5,7 @@ import {MIN_PLAYERS, STEP_CHANGE_ROLES} from "./GameEnvironment";
 
 export interface Player {
     name: string;
-    avatar: string;
+    avatar?: string;
     token: string;
 }
 

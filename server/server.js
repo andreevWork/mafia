@@ -82,6 +82,10 @@ server.get('/*', noCache, function (req, res) {
         default:
             // Если есть комната с таким публичным урлом, тогда это пришел игрок
             if(game_server.hasRoom(req.path.slice(1))) {
+                // Запишем урл в куку, это понадобится сокету при рукопожатии чтобы знать куда сувать игрока
+                res.cookie(GameServer.getRoomUrlToken(), req.path.slice(1), {
+                    httpOnly: true
+                });
                 res.render('player', {
                     title: 'hi'
                 });

@@ -50,14 +50,75 @@ module.exports =
 	var Roles_1 = __webpack_require__(2);
 	var RoomServer_1 = __webpack_require__(3);
 	var helpers_1 = __webpack_require__(29);
-	var config = __webpack_require__(30);
+	var IMessage_1 = __webpack_require__(30);
+	var config = __webpack_require__(31);
 	exports.ROOM_COOKIE_TOKEN = 'ROOMID';
+	exports.PLAYER_COOKIE_TOKEN = 'PLAYERID';
+	exports.ROOMURL_COOKIE_TOKEN = 'ROOMURL';
 	var GameServer = (function () {
-	    function GameServer(web_socket_server_rooms) {
-	        var _this = this;
+	    function GameServer(ws) {
+	        this.ws = ws;
 	        this.rooms = [];
+	        this.initRooms();
+	        this.initPlayers();
+	    }
+	    GameServer.getRoles = function () {
+	        return Roles_1.RolesMapping;
+	    };
+	    GameServer.getRoomToken = function () {
+	        return exports.ROOM_COOKIE_TOKEN;
+	    };
+	    GameServer.getRoomUrlToken = function () {
+	        return exports.ROOMURL_COOKIE_TOKEN;
+	    };
+	    GameServer.prototype.hasRoom = function (token) {
+	        return !!this.getRoomByToken(token) || !!this.getRoomByPublicUrl(token);
+	    };
+	    GameServer.prototype.removeRoom = function (token) {
+	        this.rooms = this.rooms.filter(function (room) { return room.getToken() !== token; });
+	    };
+	    GameServer.killSocket = function (socket) {
+	        socket.send(JSON.stringify('exist!!'));
+	        socket.close(1000);
+	    };
+	    GameServer.prototype.initPlayers = function () {
+	        var _this = this;
+	        var players_cookie_token = {};
+	        this.ws.on("headers" + config.web_socket_path.players, function (headers, upgradeReqHeaders) {
+	            var cookie = upgradeReqHeaders.cookie ? cookie_parser.parse(upgradeReqHeaders.cookie) : {}, room = _this.getRoomByPublicUrl(cookie[exports.ROOMURL_COOKIE_TOKEN]);
+	            if (!room)
+	                return;
+	            var token = helpers_1.getRandomString(32);
+	            players_cookie_token[upgradeReqHeaders['sec-websocket-key']] = token;
+	            headers.push("Set-Cookie: " + cookie_parser.serialize(exports.PLAYER_COOKIE_TOKEN, token, {
+	                httpOnly: true
+	            }));
+	        });
+	        this.ws.on("connection" + config.web_socket_path.players, function (socket) {
+	            var cookie = socket.upgradeReq.headers.cookie ? cookie_parser.parse(socket.upgradeReq.headers.cookie) : {}, room = _this.getRoomByPublicUrl(cookie[exports.ROOMURL_COOKIE_TOKEN]), exist_player;
+	            exist_player = room.getPlayerByToken(cookie[exports.PLAYER_COOKIE_TOKEN]);
+	            _this.waitAuthPlayer(socket, room, players_cookie_token[socket.upgradeReq.headers['sec-websocket-key']]);
+	            delete players_cookie_token[socket.upgradeReq.headers['sec-websocket-key']];
+	            socket.send(JSON.stringify({ type: IMessage_1.UNAUTHORIZED }));
+	        });
+	    };
+	    GameServer.prototype.waitAuthPlayer = function (socket, room, token) {
+	        socket.once('message', AuthPlayer);
+	        function AuthPlayer(message) {
+	            var data = JSON.parse(message);
+	            if (data.type === IMessage_1.AUTH_TYPE) {
+	                room.setPlayer(data.data['name'], token);
+	                room.setNewPlayerConnection(token, socket);
+	            }
+	            else {
+	                socket.once('message', AuthPlayer);
+	            }
+	        }
+	    };
+	    GameServer.prototype.initRooms = function () {
+	        var _this = this;
 	        var room_cookie_token = {};
-	        web_socket_server_rooms.on("headers" + config.web_socket_path.room, function (headers, upgradeReqHeaders) {
+	        this.ws.on("headers" + config.web_socket_path.room, function (headers, upgradeReqHeaders) {
 	            var cookie = upgradeReqHeaders.cookie ? cookie_parser.parse(upgradeReqHeaders.cookie) : {};
 	            if (!_this.hasRoom(cookie[exports.ROOM_COOKIE_TOKEN])) {
 	                var token = helpers_1.getRandomString(32);
@@ -67,7 +128,7 @@ module.exports =
 	                }));
 	            }
 	        });
-	        web_socket_server_rooms.on("connection" + config.web_socket_path.room, function (socket) {
+	        this.ws.on("connection" + config.web_socket_path.room, function (socket) {
 	            var cookie = socket.upgradeReq.headers.cookie ? cookie_parser.parse(socket.upgradeReq.headers.cookie) : {}, exist_room;
 	            exist_room = _this.getRoomByToken(cookie[exports.ROOM_COOKIE_TOKEN]);
 	            if (exist_room) {
@@ -84,10 +145,6 @@ module.exports =
 	            }
 	            console.log(_this.rooms.length);
 	        });
-	    }
-	    GameServer.killSocket = function (socket) {
-	        socket.send(JSON.stringify('exist!!'));
-	        socket.close(1000);
 	    };
 	    GameServer.prototype.removeEmptyRooms = function () {
 	        this.rooms = this.rooms.filter(function (room) { return !room.isEmpty(); });
@@ -99,18 +156,6 @@ module.exports =
 	        return public_url && this.rooms.find(function (room) { return room.getPublicUrl() === public_url; });
 	    };
 	    ;
-	    GameServer.prototype.hasRoom = function (token) {
-	        return !!this.getRoomByToken(token) || !!this.getRoomByPublicUrl(token);
-	    };
-	    GameServer.prototype.removeRoom = function (token) {
-	        this.rooms = this.rooms.filter(function (room) { return room.getToken() !== token; });
-	    };
-	    GameServer.getRoles = function () {
-	        return Roles_1.RolesMapping;
-	    };
-	    GameServer.getRoomToken = function () {
-	        return exports.ROOM_COOKIE_TOKEN;
-	    };
 	    return GameServer;
 	}());
 	exports.GameServer = GameServer;
@@ -371,11 +416,18 @@ module.exports =
 	var GameReducer_1 = __webpack_require__(24);
 	var _ = __webpack_require__(20);
 	var helpers_1 = __webpack_require__(29);
+	var Player_1 = __webpack_require__(28);
+	var IMessage_1 = __webpack_require__(30);
+	var GameAction_1 = __webpack_require__(25);
+	var RoomStatus_1 = __webpack_require__(22);
+	var RolesForPlayers = Player_1.Player.RolesForPlayers;
 	var RoomServer = (function () {
 	    function RoomServer(connection, token, clear_callback) {
 	        var _this = this;
 	        this.clear_callback = clear_callback;
+	        this.players_connections = {};
 	        this.time_last_update = Date.now();
+	        this.time_last_update_players = Date.now();
 	        this.clear_timer_time = 1000 * 60 * 2;
 	        console.log('NEW connection');
 	        var public_url = helpers_1.getRandomString(5);
@@ -386,15 +438,41 @@ module.exports =
 	        this.store.dispatch(RoomAction_1.default.createRoom(token, public_url));
 	        this.store.subscribe(function () {
 	            console.log('store update');
-	            if (_this.store.getState().room.time_last_update > _this.time_last_update) {
+	            if (_this.store.getState().room.time_last_update > _this.time_last_update || _this.store.getState().game.time_last_update > _this.time_last_update) {
 	                _this.sendStateToClient();
 	                _this.time_last_update = Date.now();
+	            }
+	            if (_this.store.getState().game.time_last_update_players > _this.time_last_update_players) {
+	                _this.store.getState().game.players.forEach(function (player) {
+	                    _this.sendPlayerStateToClient(player.token);
+	                });
+	                _this.time_last_update_players = Date.now();
 	            }
 	        });
 	        this.setNewConnection(connection);
 	    }
+	    RoomServer.prototype.setPlayer = function (name, token) {
+	        this.store.dispatch(RoomAction_1.default.addPlayer({ name: name, token: token }));
+	    };
+	    RoomServer.prototype.setNewPlayerConnection = function (token, connection) {
+	        var _this = this;
+	        this.players_connections[token] = connection;
+	        connection.on('message', function (message) {
+	            console.log('player send: %s', message);
+	        });
+	        connection.on('close', function (message) {
+	            _this.players_connections[token] = null;
+	        });
+	        this.sendPlayerStateToClient(token);
+	    };
 	    RoomServer.prototype.getToken = function () {
 	        return this.store.getState().room.token;
+	    };
+	    RoomServer.prototype.hasPlayer = function (token) {
+	        return !!this.store.getState().room.players.find(function (player) { return player.token === token; });
+	    };
+	    RoomServer.prototype.getPlayerByToken = function (token) {
+	        return this.store.getState().room.players.find(function (player) { return player.token === token; });
 	    };
 	    RoomServer.prototype.getPublicUrl = function () {
 	        return this.store.getState().room.public_url;
@@ -412,7 +490,15 @@ module.exports =
 	        }
 	        this.connection = connection;
 	        this.connection.on('message', function (message) {
-	            console.log('received: %s', message);
+	            var data = JSON.parse(message);
+	            switch (data.type) {
+	                case IMessage_1.ACTION_TYPE:
+	                    if (data.data['action'] === IMessage_1.MainAction.START_GAME) {
+	                        _this.store.dispatch(RoomAction_1.default.startPlay());
+	                        _this.store.dispatch(GameAction_1.default.createGame(RolesForPlayers(_this.store.getState().room.players)));
+	                    }
+	                    break;
+	            }
 	        });
 	        this.connection.on('close', function (message) {
 	            _this.connection = null;
@@ -428,17 +514,36 @@ module.exports =
 	    };
 	    RoomServer.prototype.sendStateToClient = function () {
 	        this.sendDataToClient({
-	            type: 'state',
+	            type: IMessage_1.STATE,
 	            payload: this.getStateForClient()
 	        });
 	    };
+	    RoomServer.prototype.sendPlayerStateToClient = function (token) {
+	        this.sendPlayerDataToClient({
+	            type: IMessage_1.PLAYER_STATE,
+	            payload: this.getPlayerStateForClient(token)
+	        }, token);
+	    };
 	    RoomServer.prototype.sendDataToClient = function (data) {
 	        this.connection.send(JSON.stringify(data));
+	    };
+	    RoomServer.prototype.sendPlayerDataToClient = function (data, token) {
+	        this.players_connections[token].send(JSON.stringify(data));
 	    };
 	    RoomServer.prototype.getStateForClient = function () {
 	        return {
 	            room: this.getStateRoomForClient(),
 	            game: this.getStateGameForClient()
+	        };
+	    };
+	    RoomServer.prototype.getPlayerStateForClient = function (token) {
+	        var is_wait = this.store.getState().room.status !== RoomStatus_1.default.PLAYING, data = { role: null };
+	        if (!is_wait) {
+	            data.role = this.store.getState().game.players.find(function (player) { return player.token === token; }).role;
+	        }
+	        return {
+	            is_wait: is_wait,
+	            data: data
 	        };
 	    };
 	    RoomServer.prototype.getStateGameForClient = function () {
@@ -3522,6 +3627,22 @@ module.exports =
 
 /***/ },
 /* 30 */
+/***/ function(module, exports) {
+
+	"use strict";
+	(function (MainAction) {
+	    MainAction[MainAction["START_GAME"] = 0] = "START_GAME";
+	})(exports.MainAction || (exports.MainAction = {}));
+	var MainAction = exports.MainAction;
+	exports.UNAUTHORIZED = 'unauthorized';
+	exports.STATE = 'state';
+	exports.PLAYER_STATE = 'player_state';
+	exports.AUTH_TYPE = 'auth_type';
+	exports.ACTION_TYPE = 'action_type';
+
+
+/***/ },
+/* 31 */
 /***/ function(module, exports) {
 
 	module.exports = {
