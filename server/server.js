@@ -28,6 +28,7 @@ var game_server = new GameServer(WebSocketServer);
 // Делаем доступными статичные файлы: стили и скрипты
 server.use(express.static('public/js'));
 server.use(express.static('public/css'));
+server.use(express.static('public/audio'));
 server.use(express.static('public/img'));
 
 server.set('view engine', 'jade');

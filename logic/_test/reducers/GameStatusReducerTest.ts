@@ -430,7 +430,7 @@ describe('GameStatusReducer', () => {
 
         it('мафия стрела в путану, доктор хилил не путану и не цель, должны умереть оба', () => {
             let players: Array<GamePlayer> = [
-                getGamePlayer({role: Roles.INHABITANT}),
+                getGamePlayer({role: Roles.INHABITANT, token: token_4}),
                 getGamePlayer({role: Roles.WHORE, token: token_1}),
                 getGamePlayer({role: Roles.MAFIA}),
                 getGamePlayer({role: Roles.DOCTOR})
@@ -445,7 +445,7 @@ describe('GameStatusReducer', () => {
 
         it('мафия стрела в путану, доктор хилил путану, умирает только ее клиент', () => {
             let players: Array<GamePlayer> = [
-                getGamePlayer({role: Roles.INHABITANT}),
+                getGamePlayer({role: Roles.INHABITANT, token: token_4}),
                 getGamePlayer({role: Roles.WHORE, token: token_1}),
                 getGamePlayer({role: Roles.MAFIA}),
                 getGamePlayer({role: Roles.DOCTOR})
@@ -462,7 +462,7 @@ describe('GameStatusReducer', () => {
 
         it('мафия стрела в путану, доктор хилил клиента, умирает только путана', () => {
             let players: Array<GamePlayer> = [
-                getGamePlayer({role: Roles.INHABITANT}),
+                getGamePlayer({role: Roles.INHABITANT, token: token_4}),
                 getGamePlayer({role: Roles.WHORE, token: token_1}),
                 getGamePlayer({role: Roles.MAFIA}),
                 getGamePlayer({role: Roles.DOCTOR})
@@ -470,6 +470,21 @@ describe('GameStatusReducer', () => {
 
             round_data.mafia_target = token_1;
             round_data.healing = token_4;
+            status = GameStatus.WAKE_UP_INHABITANT;
+            state =  GameStatusReducer(getGameStateAfterNight(round_data, players), GameAction.nextGameStep(status));
+
+            expect(state.round_data.killed).toEqual([token_1]);
+        });
+
+        it('мафия стрела в путану, путана спала с кем то из мафий, тогда умирает только путана', () => {
+            let players: Array<GamePlayer> = [
+                getGamePlayer({role: Roles.INHABITANT}),
+                getGamePlayer({role: Roles.WHORE, token: token_1}),
+                getGamePlayer({role: Roles.MAFIA, token: token_4}),
+                getGamePlayer({role: Roles.DOCTOR})
+            ];
+
+            round_data.mafia_target = token_1;
             status = GameStatus.WAKE_UP_INHABITANT;
             state =  GameStatusReducer(getGameStateAfterNight(round_data, players), GameAction.nextGameStep(status));
 

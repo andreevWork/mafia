@@ -97,7 +97,7 @@ export default function GameStatusReducer (state: GameState = InitialGameState, 
 
             // Если мафия пришла убивать путану, тогда заодно они убьют и ее клиента
             let whore: GamePlayer = _.findWhere(state.players, {role: Roles.WHORE});
-            if(whore && whore.token === round_data.mafia_target) {
+            if(whore && whore.token === round_data.mafia_target && _.findWhere(state.players, {token: round_data.real_man}).role !== Roles.MAFIA) {
                 round_data.killed = round_data.killed.concat(round_data.real_man);
             }
 

@@ -8,14 +8,15 @@ import {
 import GameReducer from "../reducers/GameReducer";
 import * as _ from 'underscore';
 import {getRandomString} from "../utils/helpers";
-import {Player} from "../entity/Player";
+import {Player, GamePlayer} from "../entity/Player";
 import {
     IPlayerLoginMessage, IMessageFromServer, PLAYER_STATE, STATE, IDataToServer, MainAction,
-    IMessageToServer, ACTION_TYPE
+    IMessageToServer, ACTION_TYPE, VOTE_TYPE
 } from "./IMessage";
 import GameAction from "../actions/GameAction";
 import RoomStatus from "../entity/RoomStatus";
-import RolesForPlayers = Player.RolesForPlayers;
+import {GameStatusHelpers, GameStatus} from "../entity/GameStatus";
+import {VoteObject} from "../entity/Vote";
 
 
 export default class RoomServer {
@@ -40,16 +41,41 @@ export default class RoomServer {
         this.store.subscribe(() => {
             console.log('store update');
 
+            // Если время последнео отправленного состояние меньше времени последнего его именения необходимо синхронизировать
             if(this.store.getState().room.time_last_update > this.time_last_update || this.store.getState().game.time_last_update > this.time_last_update) {
                 this.sendStateToClient();
                 this.time_last_update = Date.now();
             }
 
+            // Тоже самое для игроков
             if(this.store.getState().game.time_last_update_players > this.time_last_update_players) {
-                this.store.getState().game.players.forEach((player: Player) => {
-                    this.sendPlayerStateToClient(player.token);
-                });
+                this.store.getState().game.players
+                    .filter((player: GamePlayer) => {
+                        if(this.store.getState().game.active_roles && this.store.getState().game.active_roles.length) {
+                            return !!~this.store.getState().game.active_roles.indexOf(player.role);
+                        }
+
+                        if(this.store.getState().game.round_data) {
+                            if(this.store.getState().game.round_data.killed && this.store.getState().game.round_data.killed.length) {
+                                return !!~this.store.getState().game.round_data.killed.indexOf(player.token);
+                            }
+
+                            if(this.store.getState().game.round_data.execution) {
+                                return this.store.getState().game.round_data.execution === player.token;
+                            }
+                        }
+
+                        return true;
+                    })
+                    .forEach((player: Player) => {
+                        this.sendPlayerStateToClient(player.token);
+                    });
                 this.time_last_update_players = Date.now();
+            }
+
+            // Если в массиве голосования не осталось ни одного без голоса меняем состояние
+            if(this.store.getState().game.votes.length && !this.store.getState().game.votes.find((vote: VoteObject) => !vote.for_whom_token)) {
+                this.store.dispatch(GameAction.nextGameStep(GameStatusHelpers.getNextStatus(this.store.getState().game)));
             }
         });
 
@@ -66,7 +92,13 @@ export default class RoomServer {
         
         // Подписываемся на события от игрока
         connection.on('message', (message) => {
-            console.log('player send: %s', message);
+            let data: IMessageToServer = JSON.parse(message);
+
+            switch (data.type) {
+                case VOTE_TYPE:
+                    this.store.dispatch(GameAction.vote(token, data.data['token']));
+                    break;
+            }
         });
 
         // Если соединение было оборвано зануляем сокет
@@ -118,8 +150,13 @@ export default class RoomServer {
                 case ACTION_TYPE:
                     if(data.data['action'] === MainAction.START_GAME) {
                         this.store.dispatch(RoomAction.startPlay());
-                        this.store.dispatch(GameAction.createGame(RolesForPlayers(this.store.getState().room.players)));
+                        this.store.dispatch(GameAction.createGame(Player.RolesForPlayers(this.store.getState().room.players)));
                     }
+                    
+                    if(data.data['action'] === MainAction.NEXT_STEP) {
+                        this.store.dispatch(GameAction.nextGameStep(GameStatusHelpers.getNextStatus(this.store.getState().game)));
+                    }
+                    
                     break;
             }
         });
@@ -172,10 +209,36 @@ export default class RoomServer {
 
     private getPlayerStateForClient(token: string): StatePlayerClient {
         let is_wait: boolean = this.store.getState().room.status !== RoomStatus.PLAYING,
-            data: IDataObjectPlayerClient = { role: null };
+            data: IDataObjectPlayerClient = { role: null, name : null };
 
         if(!is_wait) {
-            data.role = this.store.getState().game.players.find((player: Player) => player.token === token).role;
+            let player: GamePlayer = this.store.getState().game.players.find((player: Player) => player.token === token);
+            
+            data.role = player.role;
+            data.name = player.name;
+            data.vote_variants = this.store.getState().game.vote_variants.map((token: string) => {
+                return {
+                    token: token,
+                    name: this.getPlayerByToken(token).name
+                };
+            });
+
+            if(this.store.getState().game.status === GameStatus.VOTE_INHABITANT) {
+                data.vote_variants = data.vote_variants.filter(obj => obj.token !== token);
+            }
+
+            if(this.store.getState().game.round_data && 
+                this.store.getState().game.round_data.killed && 
+                this.store.getState().game.round_data.killed.length && 
+                !!~this.store.getState().game.round_data.killed.indexOf(token)) {
+                data.is_killed = true;
+            }
+
+            if(this.store.getState().game.round_data &&
+                this.store.getState().game.round_data.execution &&
+                this.store.getState().game.round_data.execution == token) {
+                data.is_killed = true;
+            }
         }
 
         return {
@@ -194,6 +257,19 @@ export default class RoomServer {
         delete state.prev_round_healing;
         delete state.time_last_update;
         delete state.time_last_update_players;
+
+        if(state.round_data && (state.round_data.killed || state.round_data.execution)) {
+            state.round_data = _.clone(state.round_data);
+
+            if(state.round_data.killed && state.round_data.killed.length) {
+                // На фронте массив сразу отрисовывается поэтому сразу заменим токены убитых на их имена
+                state.round_data.killed = state.round_data.killed.map(token => this.getPlayerByToken(token).name);
+            }
+
+            if(state.round_data.execution) {
+                state.round_data.execution = this.getPlayerByToken(state.round_data.execution).name;
+            }
+        }
 
         return state;
     }

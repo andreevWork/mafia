@@ -1,7 +1,7 @@
 import {StateMainClient, StatePlayerClient} from "../../../logic/src/entity/States";
 import {
     IMessageFromServer, STATE, IDataToServer, PLAYER_STATE, AUTH_TYPE, UNAUTHORIZED, IPlayerLoginMessage,
-    IAction, ACTION_TYPE
+    IAction, ACTION_TYPE, IVoteMessage, VOTE_TYPE
 } from "../../../logic/src/server/IMessage";
 var config = require('../../../config');
 
@@ -11,6 +11,7 @@ export interface IWebSocketService {
     onNewPlayerState(call_back: IWebSocketStateListener<StatePlayerClient>): void;
     sendAuthMessage(message: IPlayerLoginMessage): void;
     sendActionMessage(message: IAction): void;
+    sendVoteMessage(message: IVoteMessage): void;
 }
 
 export interface IOptions {
@@ -24,6 +25,8 @@ export default class WebSocketService implements IWebSocketService {
 
     constructor(options: IOptions) {
         this.connection = new WebSocket(`ws://${config.domain}:${config.web_socket_port}${options.path}`);
+
+        this.subscribeOnSocketUpdate();
     }
 
     sendAuthMessage(message: IPlayerLoginMessage) {
@@ -32,6 +35,15 @@ export default class WebSocketService implements IWebSocketService {
             data: message
         };
         
+        this.connection.send(JSON.stringify(data));
+    }
+
+    sendVoteMessage(message: IVoteMessage) {
+        let data: IDataToServer = {
+            type: VOTE_TYPE,
+            data: message
+        };
+
         this.connection.send(JSON.stringify(data));
     }
 

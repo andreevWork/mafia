@@ -25,7 +25,7 @@ export default class RoomWaitPlayers extends React.Component<IRoomProps, void> {
             <header className="room-header" />
             <div className="room-content">
                 <PublicUrl public_url={config.domain + '/' + this.props.room.public_url} />
-                <Players players={this.props.room.players} />
+                <Players players={this.props.room.players} title="Игроки в комнате: " />
                 {this.props.room.is_ready ? <div className="room-content__button-block">
                         <span className="btn" onClick={() => this.StartGame()}>Начать игру</span>
                     </div>

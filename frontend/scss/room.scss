@@ -3,7 +3,6 @@
 
 .room-container {
   min-height: 100vh;
-  padding-bottom: 5vh;
   background: rgba(darken($main_color, 15%), $main_opacity);
 
   @include phone {
@@ -15,6 +14,33 @@
   }
 
   .room-content {
+    min-height: 90vh;
+
+    &__screen-status {
+      display: flex;
+      align-items: center;
+      text-align: center;
+      justify-content: center;
+      width: 100%;
+      height: 90vh;
+    }
+
+    &__screen-night{
+      margin: auto;
+      font-size: 2.5em;
+      @include nicetext;
+    }
+
+    &__screen-wait-vote{
+      margin: auto;
+      font-size: 1.5em;
+    }
+
+    &__screen-necrology {
+      width: 70%;
+      margin: auto;
+      font-size: 2em;
+    }
 
     &__button-block {
       text-align: center;
@@ -36,31 +62,6 @@
 
       &-item {
         color: $brand_color;
-      }
-    }
-
-    &__players {
-      width: $width_block;
-      margin-left: $margin_left_block;
-      display: flex;
-      flex-flow: row wrap;
-      justify-content: space-around;
-
-      &-header {
-        font-size: 2.3em;
-        width: 100%;
-        margin-bottom: 50px;
-      }
-
-      &-item {
-        font-size: 2em;
-        width: 33%;
-        font-weight:bold;
-        margin-bottom: 50px;
-
-        @include tablet {
-          width: 90%;
-        }
       }
     }
   }

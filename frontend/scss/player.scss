@@ -10,8 +10,20 @@
   align-content: space-around;
   background: rgba(darken($main_color, 7%), $main_opacity);
 
+  .player-header {
+    @include  header;
+    width: 100%;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+  }
+
   &__wait {
     background: rgba(darken($main_color, 25%), $main_opacity);
+  }
+
+  &__killed {
+    background: rgba(darken($main_color, 35%), $main_opacity - 0.4);
   }
 
   &__card-block {
@@ -93,5 +105,19 @@
     font-size: 1.7em;
     text-align: center;
     margin: auto;
+  }
+
+  &__killed-text {
+    font-size: 1.3em;
+    text-align: center;
+    margin: auto;
+    color: darken($text_color, 5%);
+  }
+
+  .player-content {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    padding-top: 10vh;
   }
 }

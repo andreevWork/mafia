@@ -1818,9 +1818,9 @@
 	"use strict";
 	var RoomAction;
 	(function (RoomAction) {
-	    RoomAction[RoomAction["CREATE_ROOM"] = 0] = "CREATE_ROOM";
-	    RoomAction[RoomAction["ADD_PLAYER"] = 1] = "ADD_PLAYER";
-	    RoomAction[RoomAction["START_PLAY"] = 2] = "START_PLAY";
+	    RoomAction[RoomAction["CREATE_ROOM"] = 50] = "CREATE_ROOM";
+	    RoomAction[RoomAction["ADD_PLAYER"] = 51] = "ADD_PLAYER";
+	    RoomAction[RoomAction["START_PLAY"] = 52] = "START_PLAY";
 	})(RoomAction || (RoomAction = {}));
 	var RoomAction;
 	(function (RoomAction) {

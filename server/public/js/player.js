@@ -49,17 +49,10 @@
 	var WebSocketService_1 = __webpack_require__(1);
 	var ReactDOM = __webpack_require__(4);
 	var React = __webpack_require__(169);
-	var PlayerLogin_1 = __webpack_require__(175);
-	var PlayerScreen_1 = __webpack_require__(176);
+	var PlayerScreen_1 = __webpack_require__(175);
 	var config = __webpack_require__(3);
 	WebSocketService_1.default.createInstance({ path: config.web_socket_path.players });
-	var web_socket_service = WebSocketService_1.default.getInstance();
-	web_socket_service.onUnauthorized(function () {
-	    ReactDOM.render(React.createElement(PlayerLogin_1.default), document.body);
-	});
-	web_socket_service.onNewPlayerState(function (new_state) {
-	    ReactDOM.render(React.createElement(PlayerScreen_1.default, new_state), document.body);
-	});
+	ReactDOM.render(React.createElement(PlayerScreen_1.default), document.body);
 
 /***/ },
 /* 1 */
@@ -75,10 +68,18 @@
 	        this.unauthorized_listeners = [];
 	        this.state_players_listeners = [];
 	        this.connection = new WebSocket("ws://" + config.domain + ":" + config.web_socket_port + options.path);
+	        this.subscribeOnSocketUpdate();
 	    }
 	    WebSocketService.prototype.sendAuthMessage = function (message) {
 	        var data = {
 	            type: IMessage_1.AUTH_TYPE,
+	            data: message
+	        };
+	        this.connection.send(JSON.stringify(data));
+	    };
+	    WebSocketService.prototype.sendVoteMessage = function (message) {
+	        var data = {
+	            type: IMessage_1.VOTE_TYPE,
 	            data: message
 	        };
 	        this.connection.send(JSON.stringify(data));
@@ -142,6 +143,7 @@
 
 	(function (MainAction) {
 	    MainAction[MainAction["START_GAME"] = 0] = "START_GAME";
+	    MainAction[MainAction["NEXT_STEP"] = 1] = "NEXT_STEP";
 	})(exports.MainAction || (exports.MainAction = {}));
 	var MainAction = exports.MainAction;
 	exports.UNAUTHORIZED = 'unauthorized';
@@ -149,6 +151,7 @@
 	exports.PLAYER_STATE = 'player_state';
 	exports.AUTH_TYPE = 'auth_type';
 	exports.ACTION_TYPE = 'action_type';
+	exports.VOTE_TYPE = 'vote_type';
 
 /***/ },
 /* 3 */
@@ -21180,41 +21183,116 @@
 	    }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
+	var __assign = this && this.__assign || Object.assign || function (t) {
+	    for (var s, i = 1, n = arguments.length; i < n; i++) {
+	        s = arguments[i];
+	        for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p)) t[p] = s[p];
+	    }
+	    return t;
+	};
 	var React = __webpack_require__(169);
+	var Players_1 = __webpack_require__(176);
+	var PlayerLogin_1 = __webpack_require__(185);
+	var Roles_1 = __webpack_require__(177);
 	var WebSocketService_1 = __webpack_require__(1);
-	var PlayerLogin = function (_super) {
-	    __extends(PlayerLogin, _super);
-	    function PlayerLogin() {
+	var PlayerScreen = function (_super) {
+	    __extends(PlayerScreen, _super);
+	    function PlayerScreen() {
 	        _super.apply(this, arguments);
 	        this.state = {
-	            name: ''
+	            el: React.createElement("div", null)
 	        };
 	    }
-	    PlayerLogin.prototype.onChange = function (e) {
-	        this.setState({
-	            name: e.target.value.trim()
-	        });
-	    };
-	    PlayerLogin.prototype.onSubmit = function (e) {
-	        e.preventDefault();
-	        if (!this.state.name) return alert('Введите имя');
-	        var web_socket_service = WebSocketService_1.default.getInstance();
-	        web_socket_service.sendAuthMessage({
-	            name: this.state.name
-	        });
-	    };
-	    PlayerLogin.prototype.render = function () {
+	    PlayerScreen.prototype.componentDidMount = function () {
 	        var _this = this;
-	        return React.createElement("div", { className: "player-container" }, React.createElement("form", { className: "player-container__login", onSubmit: function (e) {
-	                return _this.onSubmit(e);
-	            } }, React.createElement("input", { type: "text", onChange: function (e) {
-	                return _this.onChange(e);
-	            }, value: this.state.name }), React.createElement("label", null, "Введите свое имя"), React.createElement("br", null)));
+	        var web_socket_service = WebSocketService_1.default.getInstance();
+	        web_socket_service.onUnauthorized(function () {
+	            _this.setState({
+	                el: React.createElement(PlayerLogin_1.default, null)
+	            });
+	        });
+	        web_socket_service.onNewPlayerState(function (new_state) {
+	            _this.setState({
+	                el: React.createElement(PlayerComponent, __assign({}, new_state))
+	            });
+	        });
 	    };
-	    return PlayerLogin;
+	    PlayerScreen.prototype.render = function () {
+	        return React.createElement("div", null, this.state.el);
+	    };
+	    return PlayerScreen;
 	}(React.Component);
 	Object.defineProperty(exports, "__esModule", { value: true });
-	exports.default = PlayerLogin;
+	exports.default = PlayerScreen;
+	var PlayerComponent = function (_super) {
+	    __extends(PlayerComponent, _super);
+	    function PlayerComponent() {
+	        _super.apply(this, arguments);
+	    }
+	    PlayerComponent.prototype.render = function () {
+	        if (this.props.is_wait) {
+	            return React.createElement(WaitStartGame, null);
+	        }
+	        if (this.props.data.is_killed) {
+	            return React.createElement(WasKilled, null);
+	        }
+	        return React.createElement(PlayerRender, __assign({}, this.props));
+	    };
+	    return PlayerComponent;
+	}(React.Component);
+	var PlayerRender = function (_super) {
+	    __extends(PlayerRender, _super);
+	    function PlayerRender() {
+	        _super.apply(this, arguments);
+	        this.state = {
+	            is_back: true,
+	            client: this.props
+	        };
+	    }
+	    PlayerRender.prototype.componentWillReceiveProps = function (nextProps) {
+	        this.setState({
+	            client: nextProps
+	        });
+	    };
+	    PlayerRender.prototype.turnCard = function () {
+	        this.setState({
+	            is_back: !this.state.is_back
+	        });
+	    };
+	    PlayerRender.prototype.render = function () {
+	        var _this = this;
+	        return React.createElement("div", { className: "player-container" }, React.createElement("header", { className: "player-header" }, React.createElement("span", null, "\u0412\u0430\u0448 \u043D\u0438\u043A: " + this.state.client.data.name)), !this.state.client.data.vote_variants.length ? React.createElement("div", { className: "player-container__card-block" }, React.createElement("div", { className: "card__animation-container" }, React.createElement("div", { className: this.state.is_back ? "card__animation" : "card__animation flip", onClick: function () {
+	                return _this.turnCard();
+	            } }, React.createElement("img", { src: "back.png", className: "card card--big card__card-back" }), React.createElement("img", { src: Roles_1.RolesMapping[this.state.client.data.role].card_img, className: "card card--big card__card-value" })))) : React.createElement("div", { className: "player-content" }, React.createElement(Players_1.default, { title: "Выберите игрока: ", onClick: function (token) {
+	                return _this.playerVote(token);
+	            }, players: this.state.client.data.vote_variants })));
+	    };
+	    PlayerRender.prototype.playerVote = function (token) {
+	        if (confirm('Вы уверены?')) {
+	            var web_socket_service = WebSocketService_1.default.getInstance();
+	            web_socket_service.sendVoteMessage({
+	                token: token
+	            });
+	            this.setState({
+	                client: {
+	                    is_wait: this.state.client.is_wait,
+	                    data: {
+	                        role: this.state.client.data.role,
+	                        name: this.state.client.data.name,
+	                        vote_variants: []
+	                    }
+	                }
+	            });
+	        }
+	    };
+	    return PlayerRender;
+	}(React.Component);
+	var WaitStartGame = function () {
+	    return React.createElement("div", { className: "player-container player-container__wait" }, React.createElement("div", { className: "player-container__wait-text" }, "Вы подключены к комнате, ожидайте начала игры."));
+	};
+	var WasKilled = function () {
+	    return React.createElement("div", { className: "player-container player-container__killed" }, React.createElement("div", { className: "player-container__killed-text" }, "Вы были убиты, с этого момента вы обязаны молчать и ждать окончания игры."));
+	};
 
 /***/ },
 /* 176 */
@@ -21230,40 +21308,26 @@
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
 	var React = __webpack_require__(169);
-	var Roles_1 = __webpack_require__(183);
-	var PlayerScreen = function (_super) {
-	    __extends(PlayerScreen, _super);
-	    function PlayerScreen() {
+	var Players = function (_super) {
+	    __extends(Players, _super);
+	    function Players() {
 	        _super.apply(this, arguments);
-	        this.state = {
-	            is_back: true
-	        };
 	    }
-	    PlayerScreen.prototype.turnCard = function () {
-	        this.setState({
-	            is_back: !this.state.is_back
-	        });
-	    };
-	    PlayerScreen.prototype.render = function () {
+	    Players.prototype.render = function () {
 	        var _this = this;
-	        console.log(this.props);
-	        return React.createElement("div", { className: this.props.is_wait ? "player-container player-container__wait" : "player-container" }, this.props.is_wait ? React.createElement("div", { className: "player-container__wait-text" }, "Вы подключены к комнате, ожидайте начала игры.") : React.createElement("div", { className: "player-container__card-block" }, React.createElement("div", { className: "card__animation-container" }, React.createElement("div", { className: this.state.is_back ? "card__animation" : "card__animation flip", onClick: function () {
-	                return _this.turnCard();
-	            } }, React.createElement("img", { src: "back.png", className: "card card--big card__card-back" }), React.createElement("img", { src: Roles_1.RolesMapping[this.props.data.role].card_img, className: "card card--big card__card-value" })))));
+	        return React.createElement("div", { className: "players" }, React.createElement("div", { className: "players-header" }, this.props.title), this.props.players.map(function (player) {
+	            return React.createElement("div", { onClick: _this.props.onClick ? function () {
+	                    return _this.props.onClick(player.token);
+	                } : null, className: "players-item" }, player.name);
+	        }));
 	    };
-	    return PlayerScreen;
+	    return Players;
 	}(React.Component);
 	Object.defineProperty(exports, "__esModule", { value: true });
-	exports.default = PlayerScreen;
+	exports.default = Players;
 
 /***/ },
-/* 177 */,
-/* 178 */,
-/* 179 */,
-/* 180 */,
-/* 181 */,
-/* 182 */,
-/* 183 */
+/* 177 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -21304,6 +21368,62 @@
 	};
 	Object.defineProperty(exports, "__esModule", { value: true });
 	exports.default = Roles;
+
+/***/ },
+/* 178 */,
+/* 179 */,
+/* 180 */,
+/* 181 */,
+/* 182 */,
+/* 183 */,
+/* 184 */,
+/* 185 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	var __extends = this && this.__extends || function (d, b) {
+	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+	    function __() {
+	        this.constructor = d;
+	    }
+	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+	};
+	var React = __webpack_require__(169);
+	var WebSocketService_1 = __webpack_require__(1);
+	var PlayerLogin = function (_super) {
+	    __extends(PlayerLogin, _super);
+	    function PlayerLogin() {
+	        _super.apply(this, arguments);
+	        this.state = {
+	            name: ''
+	        };
+	    }
+	    PlayerLogin.prototype.onChange = function (e) {
+	        this.setState({
+	            name: e.target.value.trim()
+	        });
+	    };
+	    PlayerLogin.prototype.onSubmit = function (e) {
+	        e.preventDefault();
+	        if (!this.state.name) return alert('Введите имя');
+	        var web_socket_service = WebSocketService_1.default.getInstance();
+	        web_socket_service.sendAuthMessage({
+	            name: this.state.name
+	        });
+	    };
+	    PlayerLogin.prototype.render = function () {
+	        var _this = this;
+	        return React.createElement("div", { className: "player-container" }, React.createElement("form", { className: "player-container__login", onSubmit: function (e) {
+	                return _this.onSubmit(e);
+	            } }, React.createElement("input", { type: "text", onChange: function (e) {
+	                return _this.onChange(e);
+	            }, value: this.state.name }), React.createElement("label", null, "Введите свое имя"), React.createElement("br", null)));
+	    };
+	    return PlayerLogin;
+	}(React.Component);
+	Object.defineProperty(exports, "__esModule", { value: true });
+	exports.default = PlayerLogin;
 
 /***/ }
 /******/ ]);

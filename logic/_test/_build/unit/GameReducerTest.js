@@ -1964,7 +1964,7 @@
 	            round_data.killed = [];
 	            round_data.killed = round_data.killed.concat(round_data.mafia_target);
 	            var whore = _.findWhere(state.players, { role: Roles_1.default.WHORE });
-	            if (whore && whore.token === round_data.mafia_target) {
+	            if (whore && whore.token === round_data.mafia_target && _.findWhere(state.players, { token: round_data.real_man }).role !== Roles_1.default.MAFIA) {
 	                round_data.killed = round_data.killed.concat(round_data.real_man);
 	            }
 	            if (round_data.mafia_target === round_data.real_man) {
@@ -2144,6 +2144,14 @@
 	    return obj.max.value;
 	}
 	exports.getMaxRepeatValue = getMaxRepeatValue;
+	function getRandomString(len) {
+	    var str = '123456789qwertyuiopasdfghjklzxcvbnm', arr_symbols = str.split(''), random_str = '';
+	    while (len--) {
+	        random_str += arr_symbols[Math.floor(Math.random() * str.length)];
+	    }
+	    return random_str;
+	}
+	exports.getRandomString = getRandomString;
 
 
 /***/ },

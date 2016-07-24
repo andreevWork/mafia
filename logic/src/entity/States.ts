@@ -37,6 +37,9 @@ export interface StateMainClient {
 
 export interface IDataObjectPlayerClient {
     role: Roles;
+    name: string;
+    vote_variants?: Array<any>;
+    is_killed?: boolean;
 }
 
 export interface StatePlayerClient {

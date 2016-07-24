@@ -350,7 +350,7 @@
 	        });
 	        it('мафия стрела в путану, доктор хилил не путану и не цель, должны умереть оба', function () {
 	            var players = [
-	                PlayersMocks_1.getGamePlayer({ role: Roles_1.default.INHABITANT }),
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1.default.INHABITANT, token: token_4 }),
 	                PlayersMocks_1.getGamePlayer({ role: Roles_1.default.WHORE, token: token_1 }),
 	                PlayersMocks_1.getGamePlayer({ role: Roles_1.default.MAFIA }),
 	                PlayersMocks_1.getGamePlayer({ role: Roles_1.default.DOCTOR })
@@ -362,7 +362,7 @@
 	        });
 	        it('мафия стрела в путану, доктор хилил путану, умирает только ее клиент', function () {
 	            var players = [
-	                PlayersMocks_1.getGamePlayer({ role: Roles_1.default.INHABITANT }),
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1.default.INHABITANT, token: token_4 }),
 	                PlayersMocks_1.getGamePlayer({ role: Roles_1.default.WHORE, token: token_1 }),
 	                PlayersMocks_1.getGamePlayer({ role: Roles_1.default.MAFIA }),
 	                PlayersMocks_1.getGamePlayer({ role: Roles_1.default.DOCTOR })
@@ -375,13 +375,25 @@
 	        });
 	        it('мафия стрела в путану, доктор хилил клиента, умирает только путана', function () {
 	            var players = [
-	                PlayersMocks_1.getGamePlayer({ role: Roles_1.default.INHABITANT }),
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1.default.INHABITANT, token: token_4 }),
 	                PlayersMocks_1.getGamePlayer({ role: Roles_1.default.WHORE, token: token_1 }),
 	                PlayersMocks_1.getGamePlayer({ role: Roles_1.default.MAFIA }),
 	                PlayersMocks_1.getGamePlayer({ role: Roles_1.default.DOCTOR })
 	            ];
 	            round_data.mafia_target = token_1;
 	            round_data.healing = token_4;
+	            status = GameStatus_1.GameStatus.WAKE_UP_INHABITANT;
+	            state = GameStatusReducer_1.default(GameStateMocks_1.getGameStateAfterNight(round_data, players), GameAction_1.default.nextGameStep(status));
+	            expect(state.round_data.killed).toEqual([token_1]);
+	        });
+	        it('мафия стрела в путану, путана спала с кем то из мафий, тогда умирает только путана', function () {
+	            var players = [
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1.default.INHABITANT }),
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1.default.WHORE, token: token_1 }),
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1.default.MAFIA, token: token_4 }),
+	                PlayersMocks_1.getGamePlayer({ role: Roles_1.default.DOCTOR })
+	            ];
+	            round_data.mafia_target = token_1;
 	            status = GameStatus_1.GameStatus.WAKE_UP_INHABITANT;
 	            state = GameStatusReducer_1.default(GameStateMocks_1.getGameStateAfterNight(round_data, players), GameAction_1.default.nextGameStep(status));
 	            expect(state.round_data.killed).toEqual([token_1]);
@@ -2322,7 +2334,7 @@
 	            round_data.killed = [];
 	            round_data.killed = round_data.killed.concat(round_data.mafia_target);
 	            var whore = _.findWhere(state.players, { role: Roles_1.default.WHORE });
-	            if (whore && whore.token === round_data.mafia_target) {
+	            if (whore && whore.token === round_data.mafia_target && _.findWhere(state.players, { token: round_data.real_man }).role !== Roles_1.default.MAFIA) {
 	                round_data.killed = round_data.killed.concat(round_data.real_man);
 	            }
 	            if (round_data.mafia_target === round_data.real_man) {
@@ -2502,6 +2514,14 @@
 	    return obj.max.value;
 	}
 	exports.getMaxRepeatValue = getMaxRepeatValue;
+	function getRandomString(len) {
+	    var str = '123456789qwertyuiopasdfghjklzxcvbnm', arr_symbols = str.split(''), random_str = '';
+	    while (len--) {
+	        random_str += arr_symbols[Math.floor(Math.random() * str.length)];
+	    }
+	    return random_str;
+	}
+	exports.getRandomString = getRandomString;
 
 
 /***/ },

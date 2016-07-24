@@ -1641,6 +1641,14 @@
 	    return obj.max.value;
 	}
 	exports.getMaxRepeatValue = getMaxRepeatValue;
+	function getRandomString(len) {
+	    var str = '123456789qwertyuiopasdfghjklzxcvbnm', arr_symbols = str.split(''), random_str = '';
+	    while (len--) {
+	        random_str += arr_symbols[Math.floor(Math.random() * str.length)];
+	    }
+	    return random_str;
+	}
+	exports.getRandomString = getRandomString;
 
 
 /***/ }

@@ -420,7 +420,7 @@ module.exports =
 	var IMessage_1 = __webpack_require__(30);
 	var GameAction_1 = __webpack_require__(25);
 	var RoomStatus_1 = __webpack_require__(22);
-	var RolesForPlayers = Player_1.Player.RolesForPlayers;
+	var GameStatus_1 = __webpack_require__(26);
 	var RoomServer = (function () {
 	    function RoomServer(connection, token, clear_callback) {
 	        var _this = this;
@@ -443,10 +443,28 @@ module.exports =
 	                _this.time_last_update = Date.now();
 	            }
 	            if (_this.store.getState().game.time_last_update_players > _this.time_last_update_players) {
-	                _this.store.getState().game.players.forEach(function (player) {
+	                _this.store.getState().game.players
+	                    .filter(function (player) {
+	                    if (_this.store.getState().game.active_roles && _this.store.getState().game.active_roles.length) {
+	                        return !!~_this.store.getState().game.active_roles.indexOf(player.role);
+	                    }
+	                    if (_this.store.getState().game.round_data) {
+	                        if (_this.store.getState().game.round_data.killed && _this.store.getState().game.round_data.killed.length) {
+	                            return !!~_this.store.getState().game.round_data.killed.indexOf(player.token);
+	                        }
+	                        if (_this.store.getState().game.round_data.execution) {
+	                            return _this.store.getState().game.round_data.execution === player.token;
+	                        }
+	                    }
+	                    return true;
+	                })
+	                    .forEach(function (player) {
 	                    _this.sendPlayerStateToClient(player.token);
 	                });
 	                _this.time_last_update_players = Date.now();
+	            }
+	            if (_this.store.getState().game.votes.length && !_this.store.getState().game.votes.find(function (vote) { return !vote.for_whom_token; })) {
+	                _this.store.dispatch(GameAction_1.default.nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(_this.store.getState().game)));
 	            }
 	        });
 	        this.setNewConnection(connection);
@@ -458,7 +476,12 @@ module.exports =
 	        var _this = this;
 	        this.players_connections[token] = connection;
 	        connection.on('message', function (message) {
-	            console.log('player send: %s', message);
+	            var data = JSON.parse(message);
+	            switch (data.type) {
+	                case IMessage_1.VOTE_TYPE:
+	                    _this.store.dispatch(GameAction_1.default.vote(token, data.data['token']));
+	                    break;
+	            }
 	        });
 	        connection.on('close', function (message) {
 	            _this.players_connections[token] = null;
@@ -495,7 +518,10 @@ module.exports =
 	                case IMessage_1.ACTION_TYPE:
 	                    if (data.data['action'] === IMessage_1.MainAction.START_GAME) {
 	                        _this.store.dispatch(RoomAction_1.default.startPlay());
-	                        _this.store.dispatch(GameAction_1.default.createGame(RolesForPlayers(_this.store.getState().room.players)));
+	                        _this.store.dispatch(GameAction_1.default.createGame(Player_1.Player.RolesForPlayers(_this.store.getState().room.players)));
+	                    }
+	                    if (data.data['action'] === IMessage_1.MainAction.NEXT_STEP) {
+	                        _this.store.dispatch(GameAction_1.default.nextGameStep(GameStatus_1.GameStatusHelpers.getNextStatus(_this.store.getState().game)));
 	                    }
 	                    break;
 	            }
@@ -537,9 +563,32 @@ module.exports =
 	        };
 	    };
 	    RoomServer.prototype.getPlayerStateForClient = function (token) {
-	        var is_wait = this.store.getState().room.status !== RoomStatus_1.default.PLAYING, data = { role: null };
+	        var _this = this;
+	        var is_wait = this.store.getState().room.status !== RoomStatus_1.default.PLAYING, data = { role: null, name: null };
 	        if (!is_wait) {
-	            data.role = this.store.getState().game.players.find(function (player) { return player.token === token; }).role;
+	            var player = this.store.getState().game.players.find(function (player) { return player.token === token; });
+	            data.role = player.role;
+	            data.name = player.name;
+	            data.vote_variants = this.store.getState().game.vote_variants.map(function (token) {
+	                return {
+	                    token: token,
+	                    name: _this.getPlayerByToken(token).name
+	                };
+	            });
+	            if (this.store.getState().game.status === GameStatus_1.GameStatus.VOTE_INHABITANT) {
+	                data.vote_variants = data.vote_variants.filter(function (obj) { return obj.token !== token; });
+	            }
+	            if (this.store.getState().game.round_data &&
+	                this.store.getState().game.round_data.killed &&
+	                this.store.getState().game.round_data.killed.length &&
+	                !!~this.store.getState().game.round_data.killed.indexOf(token)) {
+	                data.is_killed = true;
+	            }
+	            if (this.store.getState().game.round_data &&
+	                this.store.getState().game.round_data.execution &&
+	                this.store.getState().game.round_data.execution == token) {
+	                data.is_killed = true;
+	            }
 	        }
 	        return {
 	            is_wait: is_wait,
@@ -547,6 +596,7 @@ module.exports =
 	        };
 	    };
 	    RoomServer.prototype.getStateGameForClient = function () {
+	        var _this = this;
 	        var state = _.clone(this.store.getState().game);
 	        delete state.players;
 	        delete state.vote_variants;
@@ -555,6 +605,15 @@ module.exports =
 	        delete state.prev_round_healing;
 	        delete state.time_last_update;
 	        delete state.time_last_update_players;
+	        if (state.round_data && (state.round_data.killed || state.round_data.execution)) {
+	            state.round_data = _.clone(state.round_data);
+	            if (state.round_data.killed && state.round_data.killed.length) {
+	                state.round_data.killed = state.round_data.killed.map(function (token) { return _this.getPlayerByToken(token).name; });
+	            }
+	            if (state.round_data.execution) {
+	                state.round_data.execution = this.getPlayerByToken(state.round_data.execution).name;
+	            }
+	        }
 	        return state;
 	    };
 	    RoomServer.prototype.getStateRoomForClient = function () {
@@ -3444,7 +3503,7 @@ module.exports =
 	            round_data.killed = [];
 	            round_data.killed = round_data.killed.concat(round_data.mafia_target);
 	            var whore = _.findWhere(state.players, { role: Roles_1.default.WHORE });
-	            if (whore && whore.token === round_data.mafia_target) {
+	            if (whore && whore.token === round_data.mafia_target && _.findWhere(state.players, { token: round_data.real_man }).role !== Roles_1.default.MAFIA) {
 	                round_data.killed = round_data.killed.concat(round_data.real_man);
 	            }
 	            if (round_data.mafia_target === round_data.real_man) {
@@ -3632,6 +3691,7 @@ module.exports =
 	"use strict";
 	(function (MainAction) {
 	    MainAction[MainAction["START_GAME"] = 0] = "START_GAME";
+	    MainAction[MainAction["NEXT_STEP"] = 1] = "NEXT_STEP";
 	})(exports.MainAction || (exports.MainAction = {}));
 	var MainAction = exports.MainAction;
 	exports.UNAUTHORIZED = 'unauthorized';
@@ -3639,6 +3699,7 @@ module.exports =
 	exports.PLAYER_STATE = 'player_state';
 	exports.AUTH_TYPE = 'auth_type';
 	exports.ACTION_TYPE = 'action_type';
+	exports.VOTE_TYPE = 'vote_type';
 
 
 /***/ },
